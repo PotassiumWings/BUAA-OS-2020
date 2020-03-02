@@ -10,7 +10,7 @@ $(modules):
 
 
 clean:
-	for d in $(modules):\
+	for d in $(modules);\
 		do\
-			$(MAKE) --direcroty=$$d clean;\
+			$(MAKE) --directory=$$d clean;\
 		done;\
