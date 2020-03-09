@@ -45,7 +45,7 @@ lp_Print(void (*output)(void *, char *, int),
 
     char c;
     char *s;
-    long int num;
+    long int num = 0;
 
 	
 
@@ -66,20 +66,65 @@ lp_Print(void (*output)(void *, char *, int),
 
         /* Part1: your code here */
 
-	{ 
+	{{{{{{ 
 	    /* scan for the next '%' */
+		char *temp = fmt;
+		while(*temp != '\0' && *temp != '%') temp++;
 	    /* flush the string found so far */
-
+		OUTPUT(arg, fmt, temp - fmt);
+		fmt = temp;
 	    /* check "are we hitting the end?" */
-	}
+		if(*fmt == '\0')
+			break;
+	}}}}}}
 
 	
 	/* we found a '%' */
+	fmt++;
+
+	/* initialize */
+	padc = ' ';
+	ladjust = 0;
+	prec = 0;
+	width = 0;
+	negFlag = 0;
+	longFlag = 0;
+
+	/* check for padc and adjust */
+	if (*fmt == '-') {
+		fmt++;
+		ladjust = 1;
+	}
+
+	if (*fmt == '0') {
+		padc = *fmt;
+		fmt++;
+	}
+
+	/* check for width */
+	while (IsDigit(*fmt)) {
+		width = width * 10 + Ctod(*fmt);
+		fmt++;
+	}
+
+	/* check for prec */
+	if (*fmt == '.') {
+		fmt++;
+		while(IsDigit(*fmt)) {
+			prec = prec * 10 + Ctod(*fmt);
+			fmt++;
+		}
+	} else {
+		prec = 6;
+	}
 	
 	/* check for long */
-
+	if (*fmt == 'l') {
+		longFlag = 1;
+		fmt++;
+	}
+	
 	/* check for other prefixes */
-
 	/* check format flag */
 	
 
@@ -108,7 +153,12 @@ lp_Print(void (*output)(void *, char *, int),
 			Refer to other part (case 'b',case 'o' etc.) and func PrintNum to complete this part.
 			Think the difference between case 'd' and others. (hint: negFlag).
 		*/
-	    
+		if (num < 0) {
+			negFlag = 1;
+			num = -num;
+		}
+		length = PrintNum(buf, num, 10, negFlag, width, ladjust, padc, 0);
+	    	OUTPUT(arg, buf, length);
 		break;
 
 	 case 'o':
@@ -161,10 +211,10 @@ lp_Print(void (*output)(void *, char *, int),
 
 	 case 's':
 	    s = (char*)va_arg(ap, char *);
-	    length = PrintString(buf, s, width, ladjust);
+	    length = PrintNum(buf, num, 10, 0, width, ladjust, padc, 0);
 	    OUTPUT(arg, buf, length);
 	    break;
-
+	    
 	 case '\0':
 	    fmt --;
 	    break;
@@ -260,33 +310,32 @@ PrintNum(char * buf, unsigned long u, int base, int negFlag,
     if (ladjust) {
 	padc = ' ';
     }
-    if (negFlag && !ladjust && (padc == '0')) {
-	for (i = actualLength-1; i< length-1; i++) buf[i] = padc;
-	buf[length -1] = '-';
-    } else {
-	for (i = actualLength; i< length; i++) buf[i] = padc;
-    }
-	    
-
-    /* prepare to reverse the string */
-    {
-	int begin = 0;
-	int end;
-	if (ladjust) {
-	    end = actualLength - 1;
+    	if(negFlag && !ladjust && (padc == '0')) {
+		for (i = actualLength-1; i<length-1; i++) buf[i]=padc;
+		buf[length -1] = '-';
 	} else {
-	    end = length -1;
+		for (i = actualLength; i< length; i++) buf[i]=padc;
 	}
-
-	while (end > begin) {
-	    char tmp = buf[begin];
-	    buf[begin] = buf[end];
-	    buf[end] = tmp;
-	    begin ++;
-	    end --;
+	
+	/* prepare to reverse the string */
+	{
+		int begin = 0;
+		int end;
+		if (ladjust) {
+			end = actualLength - 1;
+		} else {
+			end = length - 1;
+		}
+		
+		while(end > begin) {
+			char tmp = buf[begin];
+			buf[begin] = buf[end];
+			buf[end] = tmp;
+			begin++;
+			end--;
+		}
 	}
-    }
-
-    /* adjust the string pointer */
-    return length;
+	
+	/* adjust the string pointer */
+	return length;
 }
