@@ -211,7 +211,7 @@ lp_Print(void (*output)(void *, char *, int),
 
 	 case 's':
 	    s = (char*)va_arg(ap, char *);
-	    length = PrintNum(buf, num, 10, 0, width, ladjust, padc, 0);
+	    length = PrintString(buf, s, width, ladjust);
 	    OUTPUT(arg, buf, length);
 	    break;
 	    
