@@ -30,7 +30,7 @@ int is_elf_format(u_char *binary)
 }
 
 #define REVERSE_32(x) ((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)&0xff0000)>>8)|(((x)&0xff000000)>>24))
-#define REVERSE_16(x) ((((x)&0xff)<<8)|(((x)&&0xff00)>>8))
+#define REVERSE_16(x) ((((x)&0xff)<<8)|(((x)&0xff00)>>8))
 
 /* Overview:
  *   read an elf format binary file. get ELF's information
@@ -88,6 +88,7 @@ int readelf(u_char *binary, int size)
 			printf("%d:0x%x,0x%x\n", Nr, REVERSE_32(phdr -> p_filesz), REVERSE_32(phdr -> p_memsz));
 		}
 	}
+	//printf("%x,%x\n",REVERSE_32(0x12345678),REVERSE_16(0x1234));
         // for each section header, output section number and section addr. 
         // hint: section number starts at 0.
 	//printf("%d",ehdr->e_type);
