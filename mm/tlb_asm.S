@@ -21,6 +21,7 @@ nop
 	mtc0	zero,CP0_ENTRYLO0
 	nop
 	// insert tlbp or tlbwi
+    tlbwi
 NOFOUND:
 
 	mtc0	k1,CP0_ENTRYHI
