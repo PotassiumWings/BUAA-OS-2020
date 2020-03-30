@@ -286,7 +286,7 @@ void get_page_status(int pa) {
     int var2 = 1;
     int flag = 0;
     struct Page *page = pa2page(pa);
-    struct tempPage;
+    struct Page *tempPage;
     LIST_FOREACH(tempPage, &page_free_list, pp_link) {
         if (tempPage == page) {
             flag = 1;
