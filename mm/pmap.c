@@ -284,8 +284,15 @@ page_free(struct Page *pp)
 void get_page_status(int pa) {
     static int var1 = 0;
     int var2 = 1;
+    int flag = 0;
     struct Page *page = pa2page(pa);
-    if (page->pp_link.le_prev == NULL || *(page->pp_link.le_prev) != page) {
+    struct tempPage;
+    LIST_FOREACH(tempPage, &page_free_list, pp_link) {
+        if (tempPage == page) {
+            flag = 1;
+        }
+    }
+    if (flag/*page->pp_link.le_prev == NULL || *(page->pp_link.le_prev) != page*/) {
         var2 = 1;
     } else if (page -> pp_ref > 0) {
         var2 = 3;
