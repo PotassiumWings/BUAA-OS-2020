@@ -53,29 +53,38 @@ static void *alloc(u_int n, u_int align, int clear)
     /* Initialize `freemem` if this is the first time. The first virtual address that the
      * linker did *not* assign to any kernel code or global variables. */
     if (freemem == 0) {
-        freemem = (u_long)end;
+        freemem = maxpa + 0x80000000;
+        // freemem = (u_long)end;
     }
 
     /* Step 1: Round up `freemem` up to be aligned properly */
-    freemem = ROUND(freemem, align);
+    freemem = ROUNDDOWN(freemem, align);
+    // freemem = ROUND(freemem, align);
 
     /* Step 2: Save current value of `freemem` as allocated chunk. */
-    alloced_mem = freemem;
+    // alloced_mem = freemem;
 
     /* Step 3: Increase `freemem` to record allocation. */
-    freemem = freemem + n;
+    // freemem = freemem + n;
+    freemem = freemem - n;
+    // freemem = ROUNDDOWN(freemem, align);
+    alloced_mem = freemem;
 
     /* Step 4: Clear allocated chunk if parameter `clear` is set. */
-    if (clear) {
+    /*if (clear) {
         bzero((void *)alloced_mem, n);
-    }
+    }*/
 
     // We're out of memory, PANIC !!
-    if (PADDR(freemem) >= maxpa) {
+    // if (PADDR(freemem) >= maxpa) {
+    if (freemem < (u_long)end) {
         panic("out of memorty\n");
         return (void *)-E_NO_MEM;
     }
 
+    if (clear) {
+        bzero((void *)alloced_mem, n);
+    }
     /* Step 5: return allocated chunk. */
     return (void *)alloced_mem;
 }
@@ -193,35 +202,53 @@ page_init(int mode)
     LIST_INIT(&page_free_list);
 
     /* Step 2: Align `freemem` up to multiple of BY2PG. */
-    freemem = ROUND(freemem, BY2PG);
+    // freemem = ROUND(freemem, BY2PG);
 
-    /* Step 3: Mark all memory blow `freemem` as used(set `pp_ref`
-     * filed to 1) */
-    struct Page *iter = pages;
-    while (page2kva(iter) < freemem) {
-        iter->pp_ref = 1;
-        iter++;
+
+    //changed 
+    /*freemem = ROUNDDOWN(freemem, BY2PG);
+
+    //  Step 3: Mark all memory blow `freemem` as used(set `pp_ref`
+    // * filed to 1) 
+    int num = (maxpa + 0x80000000 - freemem) / BY2PG;
+    int i;
+    for (i = 0; i < num; i++) { // changed
+        (pages + i)->pp_ref = 1;
     }
 
 
-    /* Step 4: Mark the other memory as free. */
+    // Step 4: Mark the other memory as free. 
     // iter = pages + PPN(PADDR(freemem));
-    if (mode != 0) {
-       struct Page *iterTail = iter;
-       while (page2ppn(iterTail) < npage) {
-            iterTail++;
-       }
-       do {
-           iterTail--;
-           iterTail->pp_ref = 0;
-           LIST_INSERT_HEAD(&page_free_list, iterTail, pp_link);
-       } while (iterTail != iter);
-    } else {
-        while (page2ppn(iter) < npage) {
-            iter->pp_ref = 0;
-            LIST_INSERT_HEAD(&page_free_list, iter, pp_link);
-            iter++;
+    if (mode == 0) { // changed
+        for (i = npage - 1; i>= num; i--) {
+            LIST_INSERT_HEAD(&page_free_list, pages + i, pp_link);
         }
+    } else {
+        for (i = num; i < npage; i++) {
+            LIST_INSERT_HEAD(&page_free_list, pages + i, pp_link);
+        }
+    }*/
+
+    //ORIGIN
+    freemem = ROUND(freemem, BY2PG);
+    struct Page* iter = pages;
+    while (page2kva(iter) >= freemem) {
+        iter->pp_ref = 1;
+        iter++;
+    }
+    struct Page* iterTail = iter;
+    while (page2ppn(iterTail) < npage) {
+        iterTail++;
+    }
+    if (mode == 0) {
+        while (page2ppn(iter) < npage) {
+            LIST_INSERT_HEAD(&page_free_list, iter, pp_link);
+        }
+    }  else {
+        do {
+            iterTail--;
+            LIST_INSERT_HEAD(&page_free_list, iterTail, pp_link);
+        } while(iterTail != iter);
     }
 }
 
