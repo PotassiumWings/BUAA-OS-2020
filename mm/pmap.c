@@ -202,6 +202,45 @@ page_init(int mode)
     LIST_INIT(&page_free_list);
 
     /* Step 2: Align `freemem` up to multiple of BY2PG. */
+    freemem = ROUND(freemem, BY2PG);
+
+    /* Step 3: Mark all memory blow `freemem` as used(set `pp_ref`
+     * filed to 1) */
+    struct Page *iter = pages;
+    while (page2kva(iter) < freemem) {
+        iter->pp_ref = 1;
+        iter++;
+    }
+
+
+    /* Step 4: Mark the other memory as free. */
+    // iter = pages + PPN(PADDR(freemem));
+    if (mode != 0) {
+       struct Page *iterTail = iter;
+       while (page2ppn(iterTail) < npage) {
+            iterTail++;
+       }
+       do {
+           iterTail--;
+           iterTail->pp_ref = 0;
+           LIST_INSERT_HEAD(&page_free_list, iterTail, pp_link);
+       } while (iterTail != iter);
+    } else {
+        while (page2ppn(iter) < npage) {
+            iter->pp_ref = 0;
+            LIST_INSERT_HEAD(&page_free_list, iter, pp_link);
+            iter++;
+        }
+    }
+}
+/*void
+page_init(int mode)
+{
+    // Step 1: Initialize page_free_list. 
+    // Hint: Use macro `LIST_INIT` defined in include/queue.h. 
+    LIST_INIT(&page_free_list);
+
+     Step 2: Align `freemem` up to multiple of BY2PG. */
     // freemem = ROUND(freemem, BY2PG);
 
 
@@ -227,7 +266,7 @@ page_init(int mode)
         for (i = num; i < npage; i++) {
             LIST_INSERT_HEAD(&page_free_list, pages + i, pp_link);
         }
-    }*/
+    }
 
     //ORIGIN
     freemem = ROUND(freemem, BY2PG);
@@ -250,7 +289,7 @@ page_init(int mode)
             LIST_INSERT_HEAD(&page_free_list, iterTail, pp_link);
         } while(iterTail != iter);
     }
-}
+}*/
 
 /*Overview:
 	Allocates a physical page from free memory, and clear this page.
