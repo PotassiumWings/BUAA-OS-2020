@@ -285,7 +285,7 @@ void get_page_status(int pa) {
     static int var1 = 0;
     int var2 = 1;
     struct Page *page = pa2page(pa);
-    if (page->pp_link.le_prev == NULL) {
+    if (page->pp_link.le_prev == NULL || *(page->pp_link.le_prev) != page) {
         var2 = 1;
     } else if (page -> pp_ref > 0) {
         var2 = 3;
