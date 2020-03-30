@@ -186,7 +186,7 @@ void mips_vm_init()
   Hint:
 	Use `LIST_INSERT_HEAD` to insert something to list.*/
 void
-page_init(void)
+page_init(int mode)
 {
     /* Step 1: Initialize page_free_list. */
     /* Hint: Use macro `LIST_INIT` defined in include/queue.h. */
@@ -206,12 +206,23 @@ page_init(void)
 
     /* Step 4: Mark the other memory as free. */
     // iter = pages + PPN(PADDR(freemem));
-    while (page2ppn(iter) < npage) {
-        iter->pp_ref = 0;
-        LIST_INSERT_HEAD(&page_free_list, iter, pp_link);
-        iter++;
+    if (mode != 0) {
+       struct Page *iterTail = iter;
+       while (page2ppn(iterTail) < npage) {
+            iterTail++;
+       }
+       do {
+           iterTail--;
+           iterTail->pp_ref = 0;
+           LIST_INSERT_HEAD(&page_free_list, iterTail, pp_link);
+       } while (iterTail != iter);
+    } else {
+        while (page2ppn(iter) < npage) {
+            iter->pp_ref = 0;
+            LIST_INSERT_HEAD(&page_free_list, iter, pp_link);
+            iter++;
+        }
     }
-
 }
 
 /*Overview:
@@ -268,6 +279,21 @@ page_free(struct Page *pp)
     /* If the value of `pp_ref` less than 0, some error must occurred before,
      * so PANIC !!! */
     panic("cgh:pp->pp_ref is less than zero\n");
+}
+
+void get_page_status(int pa) {
+    static int var1 = 0;
+    int var2 = 1;
+    struct Page *page = pa2page(pa);
+    if (page->pp_link.le_prev == NULL) {
+        var2 = 1;
+    } else if (page -> pp_ref > 0) {
+        var2 = 3;
+    } else {
+        var2 = 2;
+    }
+    var1++;
+    printf("times:%d,page status:%d\n", var1, var2);
 }
 
 /*Overview:
