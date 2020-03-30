@@ -574,6 +574,8 @@ page_check(void)
     // free pp0 and try again: pp0 should be used for page table
     page_free(pp0);
     assert(page_insert(boot_pgdir, pp1, 0x0, 0) == 0);
+    
+    printf("%d %d\n",PTE_ADDR(boot_pgdir[0]), page2pa(pp0));
     assert(PTE_ADDR(boot_pgdir[0]) == page2pa(pp0));
 
     printf("va2pa(boot_pgdir, 0x0) is %x\n",va2pa(boot_pgdir, 0x0));
