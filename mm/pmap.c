@@ -171,7 +171,7 @@ void mips_vm_init()
     boot_map_segment(pgdir, UPAGES, n, PADDR(pages), PTE_R);
 
     /* Step 3, Allocate proper size of physical memory for global array `envs`,
-     * for process management. Then map the physical address to `UENVS`. */
+     * for process management. Then map the physical address to `UENVS`.  */
     envs = (struct Env *)alloc(NENV * sizeof(struct Env), BY2PG, 1);
     n = ROUND(NENV * sizeof(struct Env), BY2PG);
     boot_map_segment(pgdir, UENVS, n, PADDR(envs), PTE_R);
