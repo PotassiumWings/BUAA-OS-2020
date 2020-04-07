@@ -669,6 +669,7 @@ void pageout(int va, int context)
     }
 
     if (va < 0x10000) {
+        printf("pageout va:0x%x, context:0x%x\n", va, context);
         panic("^^^^^^TOO LOW^^^^^^^^^");
     }
 

@@ -21,11 +21,16 @@ void mips_init()
     /*** exercise 3.9 ***/
 	/*you may want to create process by MACRO, please read env.h file, in which you will find it. this MACRO is very
 	 * interesting, have fun please*/
-
-
+    //printf("here!\n");
+    ENV_CREATE_PRIORITY(user_A, 2);
+    //printf("here!B!\n");
+    ENV_CREATE_PRIORITY(user_B, 1);
+    //printf("created!\n");
 	
 	trap_init();
 	kclock_init();
+    //env_run(envs);
+    //env_run(LIST_FIRST(&env_sched_list[0]));
 	panic("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 	while(1);
 	panic("init.c:\tend of mips_init() reached!");
@@ -34,12 +39,14 @@ void mips_init()
 void bcopy(const void *src, void *dst, size_t len)
 {
 	void *max;
+    //printf("src:0x%x dst:0x%x\n",(int*)src,(int*)dst);
 
 	max = dst + len;
 	// copy machine words while possible
 	while (dst + 3 < max)
 	{
 		*(int *)dst = *(int *)src;
+        //printf(" 0x%x",*(int*)src);
 		dst+=4;
 		src+=4;
 	}
