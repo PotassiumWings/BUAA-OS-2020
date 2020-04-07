@@ -280,8 +280,11 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
     }
     while (i < bin_size) {
         /* Hint: You should alloc a new page. */
-        if ((r = page_alloc(&p)) != 0) {
-            return r;
+        p = page_lookup(env->env_pgdir, va + i, NULL);
+        if (p == 0) {
+            if ((r = page_alloc(&p)) != 0) {
+                return r;
+            }
         }
         page_insert(env->env_pgdir, p, va + i, PTE_R);
         temp = MIN(BY2PG, bin_size - i);
@@ -308,8 +311,11 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
         i += temp;
     }
     while (i < sgsize) {
-        if ((r = page_alloc(&p)) != 0) {
-            return r;
+        p = page_lookup(env->env_pgdir, va + i, NULL);
+        if (p == 0) {
+            if ((r = page_alloc(&p)) != 0) {
+                return r;
+            }
         }
         temp = MIN(BY2PG, sgsize - i);
         //printf("i<sgsize, %d %d\n", i, temp);
