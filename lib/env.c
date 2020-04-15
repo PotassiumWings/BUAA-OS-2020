@@ -18,6 +18,63 @@ struct Env_list env_sched_list[2];      // Runnable list
 extern Pde *boot_pgdir;
 extern char *KERNEL_SP;
 
+int check_same_root(u_int envid1, u_int envid2) {
+    struct Env *e1, *e2;
+    envid2env(envid1, &e1, 0);
+    envid2env(envid2, &e2, 0);
+    if (e1->env_status == ENV_NOT_RUNNABLE || e2->env_status == ENV_NOT_RUNNABLE) {
+        return -1;
+    }
+    while (e1->env_parent_id != 0) {
+        envid2env(e1->env_parent_id, &e1, 0);
+    }
+    while (e2->env_parent_id != 0) {
+        envid2env(e2->env_parent_id, &e2, 0);
+    }
+    return e1 == e2;
+}
+
+int f[NENV];
+int find(int x){
+    return x==f[x]?f[x]:(f[x]=find(f[x]));
+}
+
+void kill_all(u_int envid) {
+    int i, flag = 0;
+    int cur = ENVX(envid);
+    // initialize
+    for (i = 0; i < NENV; i++) {
+        f[i] = i;
+    }
+    for (i = 0; i < NENV; i++) {
+        struct Env *e = envs + i;
+        if (e->env_parent_id) {
+            f[i] = ENVX(e->env_parent_id);
+        }
+    }
+    for (i = 0; i < NENV; i++) {
+        f[i] = find(i);
+        f[cur] = find(cur);
+        if (f[i] == f[cur]) {
+            struct Env *e = envs + i;
+            if (e->env_status == ENV_NOT_RUNNABLE) {
+                flag = 1;
+                break;
+            }
+        }
+    }
+    if (flag) {
+        printf("something is wrong!");
+        return;
+    }
+    for (i = 0; i < NENV; i++) {
+        if (f[i] == f[cur]) {
+            struct Env *e = envs + i;
+            e->env_status = ENV_NOT_RUNNABLE;
+        }
+    }
+}
+
 u_int newmkenvid(struct Env *e, int pri) {
     static u_long next_new_env_id = 0;
     u_int idx = e - envs;
