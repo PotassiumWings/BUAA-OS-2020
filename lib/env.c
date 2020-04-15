@@ -25,7 +25,7 @@ u_int newmkenvid(struct Env *e, int pri) {
 }
 
 void output_env_info(int envid) {
-    static output_env_info_cnt = 1;
+    static int output_env_info_cnt = 1;
     printf("no=%d,env_index=%d,env_pri=%d\n", ++output_env_info_cnt, envid % (1 << LOG2NENV), envid >> (2 * LOG2NENV));
 }
 
