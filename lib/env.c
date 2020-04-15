@@ -18,6 +18,16 @@ struct Env_list env_sched_list[2];      // Runnable list
 extern Pde *boot_pgdir;
 extern char *KERNEL_SP;
 
+u_int newmkenvid(struct Env *e, int pri) {
+    static u_long next_new_env_id = 0;
+    u_int idx = e - envs;
+    return (++next_new_env_id << LOG2NENV) | idx | (pri << (LOG2NENV * 2));
+}
+
+void output_env_info(int envid) {
+    static output_env_info_cnt = 1;
+    printf("no=%d,env_index=%d,env_pri=%d\n", ++output_env_info_cnt, envid % (1 << LOG2NENV), envid >> (2 * LOG2NENV));
+}
 
 /* Overview:
  *  This function is for making an unique ID for every env.
@@ -91,6 +101,20 @@ int envid2env(u_int envid, struct Env **penv, int checkperm)
     return 0;
 }
 
+int newenvid2env(u_int envid, struct Env **penv, int checkperm) {
+    return envid2env(envid, penv, checkperm);
+}
+
+void init_envid() {
+    int i;
+    for (i = 0; i < NENV; i++) {
+        if (envs[i].env_status == ENV_RUNNABLE) {
+            envs[i].env_id = newmkenvid(&envs[i], envs[i].env_pri);
+        }
+    }
+}
+
+
 /* Overview:
  *  Mark all environments in 'envs' as free and insert them into the env_free_list.
  *  Insert in reverse order,so that the first call to env_alloc() returns envs[0].
@@ -120,6 +144,7 @@ env_init(void)
     }
 
 }
+
 
 
 /* Overview:
