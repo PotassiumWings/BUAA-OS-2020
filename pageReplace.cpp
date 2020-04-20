@@ -37,7 +37,7 @@ int pop_Q () {
 	}
 	while(1);
 }
-void pageReplace (long* p, long pa) {
+void pageReplace_one (long* p, long pa) {
 	int i, pgnum = getPage(pa);
 	static int full = 0;
 	static int cnt = 0;
@@ -66,3 +66,9 @@ void pageReplace (long* p, long pa) {
 		}
 	}
 } 
+void pageReplace (long* p long pa) {
+    pageReplace_one(p, pa);
+    if (true) {
+        pageReplace_one(p, pa + (1 << PG));
+    }
+}
