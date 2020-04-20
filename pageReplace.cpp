@@ -43,7 +43,7 @@ void pageReplace_one (long* p, long pa) {
 	static int cnt = 0;
 
     // avoid too many push in queue: updated 1-3
-    if (vis[pgnum] >= 4) {
+    if (vis[pgnum] >= 5) {
         return;
     }
 
