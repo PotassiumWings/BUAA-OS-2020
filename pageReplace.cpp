@@ -41,7 +41,12 @@ void pageReplace_one (long* p, long pa) {
 	int i, pgnum = getPage(pa);
 	static int full = 0;
 	static int cnt = 0;
-	
+
+    // avoid too many push in queue: updated 1-3
+    if (vis[pgnum] >= 4) {
+        return;
+    }
+
 	push_Q(pgnum);
 
 	// exist in p
@@ -68,7 +73,7 @@ void pageReplace_one (long* p, long pa) {
 } 
 void pageReplace (long* p, long pa) {
     pageReplace_one(p, pa);
-    if (true) {
-        pageReplace_one(p, pa + (1 << PG));
-    }
+    //if (true) {
+    //    pageReplace_one(p, pa + (1 << PG));
+    //}
 }
