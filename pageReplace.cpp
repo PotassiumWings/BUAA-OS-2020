@@ -66,7 +66,7 @@ void pageReplace_one (long* p, long pa) {
 		}
 	}
 } 
-void pageReplace (long* p long pa) {
+void pageReplace (long* p, long pa) {
     pageReplace_one(p, pa);
     if (true) {
         pageReplace_one(p, pa + (1 << PG));
