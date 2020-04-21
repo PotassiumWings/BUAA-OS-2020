@@ -4,13 +4,13 @@
 #define getPage(x) (x >> PG)
 
 #define MAXQUEUELEN 400
-int queue[405], hd, tl, cir; // circulate queue
-char vis[1500000]; // page in queue num
-char pos[1500000]; // in p index
+int queue[405], hd, tl; //, cir; // circulate queue
+char vis[530000]; // page in queue num
+char pos[530000]; // in p index
 void push_Q (int x) {
 	if (tl == MAXQUEUELEN) {
 		tl = 0;
-		cir++;
+		//cir++;
 	} else {
 		tl++;
 	}
@@ -20,7 +20,7 @@ void push_Q (int x) {
 int pop_Q_one () {
 	if (hd == MAXQUEUELEN) {
 		hd = 0;
-		cir--;
+		// cir--;
 	} else {
 		hd++;
 	}
@@ -29,13 +29,14 @@ int pop_Q_one () {
 	return pos[queue[hd]];
 }
 int pop_Q () {
-	while ((cir && hd > tl) || (!cir && hd < tl)) {
+	//while ((cir && hd > tl) || (!cir && hd < tl)) {
+    while (1) {
 		// del an element that doesnt exist in p 
 		int x = pop_Q_one();
 		if (x != -1)
 			return x;
 	}
-	while(1);
+	// while(1);
 }
 void pageReplace (long* p, long pa) {
 	int i, pgnum = getPage(pa);
