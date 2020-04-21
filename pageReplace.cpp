@@ -3,7 +3,7 @@
 #define PG 12
 #define getPage(x) (x >> PG)
 #pragma optimize(3)
-#pragma optimize(2)
+//#pragma optimize(2)
 
 #define MAXQUEUELEN 512
 // (hd,tl]
@@ -46,7 +46,7 @@ void pageReplace (long* p, long pa) {
 	static int full = 0;
 	static int cnt = 0;
 
-	if (vis[pgnum] >= 7) {
+	if (vis[pgnum] >= 6) {
 		return;
 	}
 
