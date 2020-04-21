@@ -7,7 +7,7 @@
 int queue[405], hd, tl; //, cir; // circulate queue
 char vis[530000]; // page in queue num
 char pos[530000]; // in p index
-void push_Q (int x) {
+inline void push_Q (int x) {
 	if (tl == MAXQUEUELEN) {
 		tl = 0;
 		//cir++;
@@ -17,7 +17,7 @@ void push_Q (int x) {
 	queue[tl] = x;
 	vis[x]++;
 }
-int pop_Q_one () {
+inline int pop_Q_one () {
 	if (hd == MAXQUEUELEN) {
 		hd = 0;
 		// cir--;
@@ -28,7 +28,7 @@ int pop_Q_one () {
 	if (vis[queue[hd]]) return -1;
 	return pos[queue[hd]];
 }
-int pop_Q () {
+inline int pop_Q () {
 	//while ((cir && hd > tl) || (!cir && hd < tl)) {
     while (1) {
 		// del an element that doesnt exist in p 
@@ -39,7 +39,7 @@ int pop_Q () {
 	// while(1);
 }
 void pageReplace (long* p, long pa) {
-	int i, pgnum = getPage(pa);
+	int pgnum = getPage(pa);
 	static int full = 0;
 	static int cnt = 0;
 	
