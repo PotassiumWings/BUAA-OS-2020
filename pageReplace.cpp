@@ -3,6 +3,7 @@
 #define PG 12
 #define getPage(x) (x >> PG)
 #pragma optimize(3)
+#pragma optimize(2)
 
 #define MAXQUEUELEN 512
 // (hd,tl]
