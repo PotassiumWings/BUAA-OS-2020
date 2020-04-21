@@ -3,33 +3,22 @@
 #define PG 12
 #define getPage(x) (x >> PG)
 
-#define MAXQUEUELEN 9000000
-int queue[10000000], hd, tl, cir; // circulate queue
+int queue[10000000], hd, tl;
 int vis[1500000]; // page in queue num
 int pos[1500000]; // in p index
 void push_Q (int x) {
-	if (tl == MAXQUEUELEN) {
-		tl = 0;
-		cir++;
-	} else {
-		tl++;
-	}
+	tl++;
 	queue[tl] = x;
 	vis[x]++;
 }
 int pop_Q_one () {
-	if (hd == MAXQUEUELEN) {
-		hd = 0;
-		cir--;
-	} else {
-		hd++;
-	}
+	hd++;
 	vis[queue[hd]]--;
 	if (vis[queue[hd]]) return -1;
 	return pos[queue[hd]];
 }
 int pop_Q () {
-	while ((cir && hd > tl) || (!cir && hd < tl)) {
+	while (hd < tl) {
 		// del an element that doesnt exist in p 
 		int x = pop_Q_one();
 		if (x != -1)
@@ -37,16 +26,15 @@ int pop_Q () {
 	}
 	while(1);
 }
-void pageReplace_one (long* p, long pa) {
+void pageReplace (long* p, long pa) {
 	int i, pgnum = getPage(pa);
 	static int full = 0;
 	static int cnt = 0;
-
-    // avoid too many push in queue: updated 1-3
-    if (vis[pgnum] >= 5) {
-        return;
-    }
-
+	
+	if (vis[pgnum] >= 5) {
+		return;
+	}
+	
 	push_Q(pgnum);
 
 	// exist in p
@@ -71,9 +59,3 @@ void pageReplace_one (long* p, long pa) {
 		}
 	}
 } 
-void pageReplace (long* p, long pa) {
-    pageReplace_one(p, pa);
-    //if (true) {
-    //    pageReplace_one(p, pa + (1 << PG));
-    //}
-}
