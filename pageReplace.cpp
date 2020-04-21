@@ -45,7 +45,7 @@ void pageReplace (long* p, long pa) {
 	static int full = 0;
 	static int cnt = 0;
 
-	if (vis[pgnum] >= 8) {
+	if (vis[pgnum] >= 6) {
 		return;
 	}
 
