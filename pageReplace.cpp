@@ -4,34 +4,35 @@
 #define getPage(x) (x >> PG)
 #pragma optimize(3)
 
-#define MAXQUEUELEN 400
-int queue[405], hd, tl; //, cir; // circulate queue
-char vis[530000]; // page in queue num
-char pos[530000]; // in p index
+#define MAXQUEUELEN 512
+// (hd,tl]
+int queue[520], hd, tl; //, cir; // circulate queue
+char vis[524288]; // page in queue num
+char pos[524288]; // in p index
 void push_Q (int x) {
 	if (tl == MAXQUEUELEN) {
 		tl = 0;
-		//cir++;
+		// cir++;
 	} else {
-		tl++;
+		++tl;
 	}
 	queue[tl] = x;
-	vis[x]++;
+	++vis[x];
 }
 int pop_Q_one () {
 	if (hd == MAXQUEUELEN) {
 		hd = 0;
 		// cir--;
 	} else {
-		hd++;
+		++hd;
 	}
-	vis[queue[hd]]--;
+	--vis[queue[hd]];
 	if (vis[queue[hd]]) return -1;
 	return pos[queue[hd]];
 }
 int pop_Q () {
 	//while ((cir && hd > tl) || (!cir && hd < tl)) {
-    while (1) {
+	while (1) {
 		// del an element that doesnt exist in p 
 		int x = pop_Q_one();
 		if (x != -1)
@@ -43,11 +44,11 @@ void pageReplace (long* p, long pa) {
 	int pgnum = getPage(pa);
 	static int full = 0;
 	static int cnt = 0;
-	
-	if (vis[pgnum] >= 5) {
+
+	if (vis[pgnum] >= 8) {
 		return;
 	}
-	
+
 	push_Q(pgnum);
 
 	// exist in p
@@ -65,9 +66,8 @@ void pageReplace (long* p, long pa) {
 	else {
 		p[cnt] = pgnum;
 		pos[pgnum] = cnt;
-		cnt++;
 		// update full
-		if (cnt == MAXPAGE) {
+		if (++cnt == MAXPAGE) {
 			full = 1;
 		}
 	}
