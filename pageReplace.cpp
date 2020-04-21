@@ -3,22 +3,33 @@
 #define PG 12
 #define getPage(x) (x >> PG)
 
-int queue[10000000], hd, tl;
+#define MAXQUEUELEN 400
+int queue[405], hd, tl, cir; // circulate queue
 int vis[1500000]; // page in queue num
 int pos[1500000]; // in p index
 void push_Q (int x) {
-	tl++;
+	if (tl == MAXQUEUELEN) {
+		tl = 0;
+		cir++;
+	} else {
+		tl++;
+	}
 	queue[tl] = x;
 	vis[x]++;
 }
 int pop_Q_one () {
-	hd++;
+	if (hd == MAXQUEUELEN) {
+		hd = 0;
+		cir--;
+	} else {
+		hd++;
+	}
 	vis[queue[hd]]--;
 	if (vis[queue[hd]]) return -1;
 	return pos[queue[hd]];
 }
 int pop_Q () {
-	while (hd < tl) {
+	while ((cir && hd > tl) || (!cir && hd < tl)) {
 		// del an element that doesnt exist in p 
 		int x = pop_Q_one();
 		if (x != -1)
