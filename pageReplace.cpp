@@ -5,8 +5,8 @@
 
 #define MAXQUEUELEN 400
 int queue[405], hd, tl, cir; // circulate queue
-int vis[1500000]; // page in queue num
-int pos[1500000]; // in p index
+char vis[1500000]; // page in queue num
+char pos[1500000]; // in p index
 void push_Q (int x) {
 	if (tl == MAXQUEUELEN) {
 		tl = 0;
