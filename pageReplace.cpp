@@ -8,14 +8,14 @@ void pageReplace (long* p, long pa) {
 	static int rdm = 5;
 	static int num = 0;
 	num++;
-	if (num < 6) {
+	/*if (num < 6) {
 		int j = 0, k = 0;
 		for (i = 0; i < 2000000000;) {
 			for (j = 0; j < 50; j++) {
 				k++;
 			}
 		}
-	}
+	}*/
 	rdm = ((rdm >> 3) + (rdm << 4) + rdm * 6) % 64;
 	for (i = 0; i < 64; i++) {
 		p[i] = cnt;
