@@ -20,7 +20,7 @@ void push_Q (int x) {
 	queue[tl] = x;
 	++vis[x];
 }
-int pop_Q () {
+inline int pop_Q () {
 	while (1) {
 		int x;
 		// del an element that doesnt exist in p 
