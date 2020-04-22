@@ -11,7 +11,7 @@ void pageReplace (long* p, long pa) {
 	if (num < 2) {
 		int j = 0, k = 0;
 		for (i = 0; i < 100000000; i++) {
-			for (j = 0; j < 1; j++) {
+			for (j = 0; j < 50; j++) {
 				k++;
 			}
 		}
