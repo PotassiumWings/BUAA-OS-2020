@@ -3,7 +3,7 @@
 #define PG 12
 #define getPage(x) (x >> PG)
 //#pragma GCC optimize("-O2")
-#pragma GCC optimize(3)
+//#pragma GCC optimize(3)
 
 #define MAXQUEUELEN 500
 // (hd,tl]
