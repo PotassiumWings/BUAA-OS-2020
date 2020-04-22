@@ -2,8 +2,8 @@
 #define MAXPAGE 64
 #define PG 12
 #define getPage(x) (x >> PG)
-#pragma GCC optimize("-O2")
-//#pragma GCC optimize(3)
+//#pragma GCC optimize("-O2")
+#pragma GCC optimize(3)
 
 #define MAXQUEUELEN 500
 // (hd,tl]
@@ -20,7 +20,7 @@ void push_Q (int x) {
 	queue[tl] = x;
 	++vis[x];
 }
-inline int pop_Q () {
+int pop_Q () {
 	while (1) {
 		int x;
 		// del an element that doesnt exist in p 
