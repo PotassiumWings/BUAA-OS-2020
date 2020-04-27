@@ -192,6 +192,7 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
     ppage = page_lookup(srcenv->env_pgdir, round_srcva, &ppte);
     if (ppage == NULL) return -E_INVAL;
     if ((*ppte & PTE_R) == 0 && (perm & PTE_R)) return -E_INVAL;
+    ppage = pa2page(PTE_ADDR(*ppte));
     ret = page_insert(dstenv->env_pgdir, ppage, round_dstva, perm);
 	return ret;
 }
@@ -266,6 +267,7 @@ int sys_set_env_status(int sysno, u_int envid, u_int status)
 	// Your code here.
 	struct Env *env;
 	int ret;
+    printf("%d set to status %d\n", envid, status);
     if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE && status != ENV_FREE) 
         return -E_INVAL;
     if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
