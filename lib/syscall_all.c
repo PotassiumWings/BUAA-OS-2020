@@ -160,7 +160,7 @@ int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm)
 
 /* Overview:
  * 	Map the page of memory at 'srcva' in srcid's address space
- * at 'dstva' in dstid's address space with permission 'perm'.
+ * at 'dstva' in dstid's address space with permission 'perm'. // fake news
  * Perm has the same restrictions as in sys_mem_alloc.
  * (Probably we should add a restriction that you can't go from
  * non-writable to writable?)
@@ -190,7 +190,7 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
     //your code here
     //printf("sys_mem_map, srcid %d, srcva 0x%x,dstid %d, dstva 0x%x\n",srcid,srcva,dstid,dstva);
     if (srcva >= UTOP || dstva >= UTOP) return -E_INVAL;
-    if ((perm & PTE_COW) || (perm & PTE_V) == 0) return -E_INVAL;
+    if ((perm & PTE_V) == 0) return -E_INVAL;
     if ((ret = envid2env(srcid, &srcenv, 0)) < 0) return ret;
     if ((ret = envid2env(dstid, &dstenv, 0)) < 0) return ret;
 
@@ -333,6 +333,7 @@ void sys_panic(int sysno, char *msg)
 void sys_ipc_recv(int sysno, u_int dstva)
 {
     //printf("sys_ipc_recv, dstva 0x%x\n", dstva);
+    if (dstva >= UTOP) return;
     curenv->env_ipc_recving = 1;
     curenv->env_ipc_dstva = dstva;
     curenv->env_status = ENV_NOT_RUNNABLE;
