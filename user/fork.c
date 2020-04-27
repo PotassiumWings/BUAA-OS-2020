@@ -84,14 +84,29 @@ pgfault(u_int va)
 {
 	u_int *tmp;
 	//	writef("fork.c:pgfault():\t va:%x\n",va);
-    
+    va = ROUNDDOWN(va, BY2PG);
+    if ((((Pte*)(*vpt))[VPN(va)] & PTE_COW) == 0) {
+        user_panic("pgfault not cow");
+    }
+
     //map the new page at a temporary place
+    tmp = USTACKTOP;
+    if (syscall_mem_alloc(0, tmp, PTE_R | PTE_V) < 0) {
+        user_panic("pgfault alloc f");
+    }
 
 	//copy the content
+    user_bcopy(va, tmp, BY2PG);
 	
     //map the page on the appropriate place
-	
+	if (syscall_mem_map(0, tmp, 0, va, PTE_R | PTE_V) < 0) {
+        user_panic("pgfault map f");
+    }
+
     //unmap the temporary place
+    if (syscall_mem_unmap(0, tmp) < 0) {
+        user_panic("pgfault unmap f");
+    }
 	
 }
 
@@ -115,8 +130,15 @@ pgfault(u_int va)
 static void
 duppage(u_int envid, u_int pn)
 {
-	u_int addr;
-	u_int perm;
+	u_int addr = pn << PGSHIFT;
+	u_int perm = ((Pte*)(*vpt))[pn] & 0xfff;
+    if (!(perm & PTE_R) || (perm & PTE_LIBRARY)) {
+        if (syscall_mem_map(0, addr, envid, addr, perm) < 0)
+            user_panic("??? duppage failed");
+    } else {
+        if (syscall_mem_map(0, addr, envid, addr, perm | PTE_COW) < 0) 
+            user_panic("??? duppage failed 2");
+    }
 
 	//	user_panic("duppage not implemented");
 }
@@ -143,10 +165,24 @@ fork(void)
 
 
 	//The parent installs pgfault using set_pgfault_handler
-
+    set_pgfault_handler(pgfault);
 	//alloc a new alloc
-
-
+    newenvid = syscall_env_alloc();
+    if (newenvid == 0) { // son
+        return 0;
+    }
+    for (i = 0; i < USTACKTOP; i+=BY2PG) {
+        if ((((Pde*)(*vpd))[i >> PDSHIFT] & PTE_V) &&
+            (((Pte*)(*vpt))[i >> PGSHIFT] & PTE_V)) {
+            duppage(newenvid, VPN(i));
+        }
+    }
+    if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0)
+        user_panic("fork alloc f");
+    if (syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, UXSTACKTOP) < 0)
+        user_panic("fork pg f");
+    if (syscall_set_env_status(newenvid, ENV_RUNNABLE) < 0)
+        user_panic("fork set f");
 	return newenvid;
 }
 
