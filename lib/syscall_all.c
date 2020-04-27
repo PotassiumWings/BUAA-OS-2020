@@ -64,6 +64,7 @@ u_int sys_getenvid(void)
 /*** exercise 4.6 ***/
 void sys_yield(void)
 {
+    //printf("sys_yield entered\n");
     bcopy((void*)KERNEL_SP - sizeof(struct Trapframe), 
           (void*)TIMESTACK - sizeof(struct Trapframe),
           sizeof(struct Trapframe));
@@ -116,6 +117,7 @@ int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
 	// Your code here.
 	struct Env *env;
 	int ret;
+    //printf("sys_set_pgfault_handler entered, envid:%d\n",envid);
     if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
     env->env_pgfault_handler = func;
     env->env_xstacktop = xstacktop;
@@ -147,6 +149,7 @@ int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm)
 	struct Env *env;
 	struct Page *ppage;
 	int ret;
+    //printf("sys_mem_alloc. envid %d, va 0x%x, perm %d\n", envid, va, perm);
 	ret = 0;
     if (va >= UTOP || (perm & PTE_COW)) return -E_INVAL;
     if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
@@ -185,6 +188,7 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	round_dstva = ROUNDDOWN(dstva, BY2PG);
 
     //your code here
+    //printf("sys_mem_map, srcid %d, srcva 0x%x,dstid %d, dstva 0x%x\n",srcid,srcva,dstid,dstva);
     if (srcva >= UTOP || dstva >= UTOP) return -E_INVAL;
     if ((ret = envid2env(srcid, &srcenv, 1)) < 0) return ret;
     if ((ret = envid2env(dstid, &dstenv, 1)) < 0) return ret;
@@ -212,6 +216,7 @@ int sys_mem_unmap(int sysno, u_int envid, u_int va)
 	// Your code here.
 	int ret;
 	struct Env *env;
+    //printf("sys_mem_unmap, envid %d, va 0x%x\n",envid, va);
 
     if (va >= UTOP) return -E_INVAL;
     if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
@@ -238,6 +243,7 @@ int sys_env_alloc(void)
 	// Your code here.
 	int r;
 	struct Env *e;
+    //printf("sys_env_alloc\n");
     if ((r = env_alloc(&e, curenv->env_id)) < 0) return r;
     bcopy((void*)KERNEL_SP - sizeof(struct Trapframe),
           (void*)&(e->env_tf), sizeof(struct Trapframe));
@@ -267,7 +273,7 @@ int sys_set_env_status(int sysno, u_int envid, u_int status)
 	// Your code here.
 	struct Env *env;
 	int ret;
-    printf("%d set to status %d\n", envid, status);
+    //printf("%d set to status %d\n", envid, status);
     if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE && status != ENV_FREE) 
         return -E_INVAL;
     if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
@@ -326,6 +332,7 @@ void sys_panic(int sysno, char *msg)
 /*** exercise 4.7 ***/
 void sys_ipc_recv(int sysno, u_int dstva)
 {
+    //printf("sys_ipc_recv, dstva 0x%x\n", dstva);
     curenv->env_ipc_recving = 1;
     curenv->env_ipc_dstva = dstva;
     curenv->env_status = ENV_NOT_RUNNABLE;
@@ -357,6 +364,7 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	int r;
 	struct Env *e;
 	struct Page *p;
+    //printf("sys_ipc_can_send, envid %d, value %d, srcva 0x%x, perm %d\n",envid,value,srcva,perm);
 
     if (srcva >= UTOP) return -E_INVAL;
     if ((r = envid2env(envid, &e, 0)) < 0) return r;
