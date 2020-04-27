@@ -61,15 +61,13 @@ u_int sys_getenvid(void)
  * Post-Condition:
  * 	Deschedule current environment. This function will never return.
  */
+/*** exercise 4.6 ***/
 void sys_yield(void)
 {
-	/*
-	bcopy((void *)KERNEL_SP - sizeof(struct Trapframe), &(curenv->env_tf), sizeof(struct Trapframe));
-	curenv->env_tf.pc = curenv->env_tf.cp0_epc;
-	curenv = NULL;
-	*/
-	bcopy((void *)KERNEL_SP - sizeof(struct Trapframe), (void *)TIMESTACK - sizeof(struct Trapframe), sizeof(struct Trapframe));
-	sched_yield();
+    bcopy((void*)KERNEL_SP - sizeof(struct Trapframe), 
+          (void*)TIMESTACK - sizeof(struct Trapframe),
+          sizeof(struct Trapframe));
+    sched_yield();
 }
 
 /* Overview:
@@ -112,21 +110,15 @@ int sys_env_destroy(int sysno, u_int envid)
  * 	exception stack will be set to `xstacktop`.
  * 	Returns 0 on success, < 0 on error.
  */
+/*** exercise 4.12 ***/
 int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
 {
 	// Your code here.
 	struct Env *env;
 	int ret;
-
-	ret = envid2env(envid, &env, 1);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	env->env_pgfault_handler = func;
-	env->env_xstacktop = xstacktop;
-
+    if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
+    env->env_pgfault_handler = func;
+    env->env_xstacktop = xstacktop;
 	return 0;
 	//	panic("sys_set_pgfault_handler not implemented");
 }
@@ -148,38 +140,19 @@ int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
  *	- va must be < UTOP
  *	- env may modify its own address space or the address space of its children
  */
+/*** exercise 4.3 ***/
 int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm)
 {
 	// Your code here.
 	struct Env *env;
 	struct Page *ppage;
 	int ret;
-	//printf("sys_mem_alloc %x %x\n",envid, va);
 	ret = 0;
-	if (va >= UTOP)
-	{
-		return -E_INVAL;
-	}
-	if (perm & PTE_COW)
-	{
-		return -E_INVAL;
-	}
-	ret = envid2env(envid, &env, 1);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	ret = page_alloc(&ppage);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	ret = page_insert(env->env_pgdir, ppage, va, perm);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	return 0;
+    if (va >= UTOP || (perm & PTE_COW)) return -E_INVAL;
+    if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
+    if ((ret = page_alloc(&ppage)) < 0) return ret;
+    if ((ret = page_insert(env->env_pgdir, ppage, va, perm)) < 0) return ret;
+    return 0;
 }
 
 /* Overview:
@@ -195,6 +168,7 @@ int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm)
  * Note:
  * 	Cannot access pages above UTOP.
  */
+/*** exercise 4.4 ***/
 int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 				u_int perm)
 {
@@ -204,53 +178,22 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	struct Env *dstenv;
 	struct Page *ppage;
 	Pte *ppte;
-	//printf("map %x %x ",srcid, dstid);
+
 	ppage = NULL;
 	ret = 0;
 	round_srcva = ROUNDDOWN(srcva, BY2PG);
 	round_dstva = ROUNDDOWN(dstva, BY2PG);
 
-    //your code her
+    //your code here
+    if (srcva >= UTOP || dstva >= UTOP) return -E_INVAL;
+    if ((ret = envid2env(srcid, &srcenv, 1)) < 0) return ret;
+    if ((ret = envid2env(dstid, &dstenv, 1)) < 0) return ret;
 
-	if (srcva >= UTOP || dstva >= UTOP)
-	{
-		return -E_INVAL;
-	}
-	// shoule i need to check PTE_V?
-	//if (perm & PTE_COW)
-	//{
-	//	return -E_INVAL;
-	//}
-	ret = envid2env(srcid, &srcenv, 1);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	ret = envid2env(dstid, &dstenv, 1);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	
-	//printf("src:%x %x dst:%x %x %x\n", srcenv->env_pgdir, srcva,dstenv->env_pgdir, dstva, perm);
-	ppage = page_lookup(srcenv->env_pgdir, round_srcva, &ppte);
-	if (ppage == NULL)
-	{
-		return -E_INVAL;
-	}
-	if (((*ppte & PTE_R) == 0) && ((perm & PTE_R) == 1))
-	{
-		return -E_INVAL;
-	}
-
-	ppage = pa2page(PTE_ADDR(*ppte));
-	ret = page_insert(dstenv->env_pgdir, ppage, round_dstva, perm);
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	ret = 0;
+    ppage = page_lookup(srcenv->env_pgdir, round_srcva, &ppte);
+    if (ppage == NULL) return -E_INVAL;
+    if ((*ppte & PTE_R) == 0 && (perm & PTE_R)) return -E_INVAL;
+    ppage = pa2page(PTE_ADDR(*ppte));
+    ret = page_insert(dstenv->env_pgdir, ppage, round_dstva, perm);
 	return ret;
 }
 
@@ -263,26 +206,16 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
  *
  * Cannot unmap pages above UTOP.
  */
+/*** exercise 4.5 ***/
 int sys_mem_unmap(int sysno, u_int envid, u_int va)
 {
-	//printf("unmap %x %x\n",envid, va);
 	// Your code here.
 	int ret;
 	struct Env *env;
 
-	if (va >= UTOP)
-	{
-		return -E_INVAL;
-	}
-
-	ret = envid2env(envid, &env, 1);
-	if(ret < 0)
-	{
-		return ret;
-	}
-
-	page_remove(env->env_pgdir, va);
-
+    if (va >= UTOP) return -E_INVAL;
+    if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
+    page_remove(env->env_pgdir, va);
 	return ret;
 	//	panic("sys_mem_unmap not implemented");
 }
@@ -299,22 +232,19 @@ int sys_mem_unmap(int sysno, u_int envid, u_int va)
  * 	In the child, the register set is tweaked so sys_env_alloc returns 0.
  * 	Returns envid of new environment, or < 0 on error.
  */
+/*** exercise 4.8 ***/
 int sys_env_alloc(void)
 {
 	// Your code here.
 	int r;
 	struct Env *e;
-	r = env_alloc(&e, curenv->env_id);
-	if (r < 0)
-	{
-		return r;
-	}
-	e->env_status = ENV_NOT_RUNNABLE;
-	e->env_pri = curenv->env_pri;
-	bcopy((void *)KERNEL_SP - sizeof(struct Trapframe), (void *)&(e->env_tf), sizeof(struct Trapframe));
-	e->env_tf.pc = e->env_tf.cp0_epc;
-	e->env_tf.regs[2] = 0;
-
+    if ((r = env_alloc(&e, curenv->env_id)) < 0) return r;
+    bcopy((void*)KERNEL_SP - sizeof(struct Trapframe),
+          (void*)&(e->env_tf), sizeof(struct Trapframe));
+    e->env_tf.pc = e->env_tf.cp0_epc;
+    e->env_status = ENV_NOT_RUNNABLE;
+    e->env_pri = curenv->env_pri;
+    e->env_tf.regs[2] = 0; // return value of func
 	return e->env_id;
 	//	panic("sys_env_alloc not implemented");
 }
@@ -331,43 +261,18 @@ int sys_env_alloc(void)
  * 	Return -E_INVAL if status is not a valid status for an environment.
  * 	The status of environment will be set to `status` on success.
  */
+/*** exercise 4.14 ***/
 int sys_set_env_status(int sysno, u_int envid, u_int status)
 {
 	// Your code here.
 	struct Env *env;
 	int ret;
-	extern struct Env_list env_sched_list[];
-	struct Env *o;
-	if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE && status != ENV_FREE)
-	{
-		return -E_INVAL;
-	}
-	ret = envid2env(envid, &env, 1);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	//printf("set status %x %d %x\n",envid, env->env_status, status);
-	/*
-	LIST_FOREACH(o, &env_sched_list[0], env_sched_link)
-	{
-		printf("%x ",o->env_id);
-	}
-	printf("\n");
-	LIST_FOREACH(o, &env_sched_list[1], env_sched_link)
-	{
-		printf("%x ",o->env_id);
-	}
-	printf("\n");
-	*/
-	if (status == ENV_FREE)
-	{
-		env_destroy(env);
-	}
-	else
-	{
-		env->env_status = status;
-	}
+    printf("%d set to status %d\n", envid, status);
+    if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE && status != ENV_FREE) 
+        return -E_INVAL;
+    if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
+    if (status == ENV_FREE) env_destroy(env);
+    else env->env_status = status;
 	return 0;
 	//	panic("sys_env_set_status not implemented");
 }
@@ -418,18 +323,13 @@ void sys_panic(int sysno, char *msg)
  * 	This syscall will set the current process's status to 
  * ENV_NOT_RUNNABLE, giving up cpu. 
  */
+/*** exercise 4.7 ***/
 void sys_ipc_recv(int sysno, u_int dstva)
 {
-	if (dstva >= UTOP)
-	{
-		return;
-	}
-
-	curenv->env_ipc_recving = 1;
-	curenv->env_ipc_dstva = dstva;
-	curenv->env_status = ENV_NOT_RUNNABLE;
-	sys_yield();
-	//cannot back
+    curenv->env_ipc_recving = 1;
+    curenv->env_ipc_dstva = dstva;
+    curenv->env_status = ENV_NOT_RUNNABLE;
+    sys_yield();
 }
 
 /* Overview:
@@ -449,6 +349,7 @@ void sys_ipc_recv(int sysno, u_int dstva)
  *
  * Hint: the only function you need to call is envid2env.
  */
+/*** exercise 4.7 ***/
 int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 					 u_int perm)
 {
@@ -456,147 +357,23 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	int r;
 	struct Env *e;
 	struct Page *p;
-	Pte *pte;
 
-	if (srcva >= UTOP)
-	{
-		return -E_INVAL;
-	}
+    if (srcva >= UTOP) return -E_INVAL;
+    if ((r = envid2env(envid, &e, 0)) < 0) return r;
+    if (e->env_ipc_recving == 0) return -E_IPC_NOT_RECV;
+    e->env_ipc_value = value;
+    e->env_ipc_from = curenv->env_id;
+    e->env_ipc_perm = perm;
+    e->env_ipc_recving = 0;
+    e->env_status = ENV_RUNNABLE;
 
-	r = envid2env(envid, &e, 0);
-	if (r < 0)
-	{
-		return r;
-	}
-
-	if (e->env_ipc_recving == 0)
-	{
-		return -E_IPC_NOT_RECV;
-	}
-
-	e->env_ipc_value = value;
-	e->env_ipc_from = curenv->env_id;
-	e->env_ipc_perm = perm;
-	e->env_ipc_recving = 0;
-	e->env_status = ENV_RUNNABLE;
-	
-	if (srcva != 0)
-	{
-		p = page_lookup(curenv->env_pgdir, srcva, &pte);
-		if (p == NULL)
-		{
-			return -E_INVAL;
-		}
-		page_insert(e->env_pgdir, p, e->env_ipc_dstva, perm);
-	}
-	return 0;
-}
-
-/* Overview:
- * 	This function is used to write data to device, which is
- * 	represented by its mapped physical address.
- *	Remember to check the validity of device address (see Hint below);
- * 
- * Pre-Condition:
- *      'va' is the startting address of source data, 'len' is the
- *      length of data (in bytes), 'dev' is the physical address of
- *      the device
- * 	
- * Post-Condition:
- *      copy data from 'va' to 'dev' with length 'len'
- *      Return 0 on success.
- *	Return -E_INVAL on address error.
- *      
- * Hint: Use ummapped segment in kernel address space to perform MMIO.
- *	 Physical device address:
- *	* ---------------------------------*
- *	|   device   | start addr | length |
- *	* -----------+------------+--------*
- *	|  console   | 0x10000000 | 0x20   |
- *	|    IDE     | 0x13000000 | 0x4200 |
- *	|    rtc     | 0x15000000 | 0x200  |
- *	* ---------------------------------*
- */
-int sys_write_dev(int sysno, u_int va, u_int dev, u_int len)
-{
-	int cnt_dev = 3;
-	u_int dev_start_addr[] = {0x10000000, 0x13000000, 0x15000000};
-	u_int dev_length[] = {0x20, 0x4200, 0x200};
-	u_int target_addr = dev + 0xa0000000;
-	int i;
-	int checked = 0;
-
-	//do check:
-	if (va >= ULIM)
-	{
-		return -E_INVAL;
-	}
-	for (i = 0; i < cnt_dev; i++)
-	{
-		if (dev_start_addr[i] <= dev && dev + len - 1 < dev_start_addr[i] + dev_length[i])
-		{
-			checked = 1;
-			break;
-		}
-	}
-	if (checked == 0)
-	{
-		return -E_INVAL;
-	}
-
-	//do copy
-	bcopy((void *)va, (void *)target_addr, len);
-	//printf("write_dev: va: %x dev: %x len: %x %s\n", va, dev, len, (char*)va);
+    if (srcva) {
+        Pte *pte;
+        p = page_lookup(curenv->env_pgdir, srcva, &pte);
+        if (p == NULL) return -E_INVAL;
+        page_insert(e->env_pgdir, p, e->env_ipc_dstva, perm);
+    }
 
 	return 0;
 }
 
-/* Overview:
- * 	This function is used to read data from device, which is
- * 	represented by its mapped physical address.
- *	Remember to check the validity of device address (same as sys_read_dev)
- * 
- * Pre-Condition:
- *      'va' is the startting address of data buffer, 'len' is the
- *      length of data (in bytes), 'dev' is the physical address of
- *      the device
- * 
- * Post-Condition:
- *      copy data from 'dev' to 'va' with length 'len'
- *      Return 0 on success, < 0 on error
- *      
- * Hint: Use ummapped segment in kernel address space to perform MMIO.
- */
-int sys_read_dev(int sysno, u_int va, u_int dev, u_int len)
-{
-	int cnt_dev = 3;
-	u_int dev_start_addr[] = {0x10000000, 0x13000000, 0x15000000};
-	u_int dev_length[] = {0x20, 0x4200, 0x200};
-	u_int target_addr = dev + 0xa0000000;
-	int i;
-	int checked = 0;
-
-	//do check:
-	if (va >= ULIM)
-	{
-		return -E_INVAL;
-	}
-	for (i = 0; i < cnt_dev; i++)
-	{
-		if (dev_start_addr[i] <= dev && dev + len - 1 < dev_start_addr[i] + dev_length[i])
-		{
-			checked = 1;
-			break;
-		}
-	}
-	if (checked == 0)
-	{
-		return -E_INVAL;
-	}
-
-	//do copy
-	bcopy((void *)target_addr, (void *)va, len);
-	//printf("read_dev: va: %x dev: %x len: %x %s\n", va, dev, len, (char*)va);
-
-	return 0;
-}
