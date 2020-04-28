@@ -31,7 +31,7 @@ void sched_yield(void)
      *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
      */
     struct Env *e = curenv;
-    if (count != 0 && e->env_status != ENV_RUNNABLE) {
+    if (count != 0 && (e == NULL ||  e->env_status != ENV_RUNNABLE)) {
         count = 0;
     }
     while (count == 0) {
