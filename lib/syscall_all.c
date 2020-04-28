@@ -118,7 +118,7 @@ int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
 	struct Env *env;
 	int ret;
     //printf("sys_set_pgfault_handler entered, envid:%d\n",envid);
-    if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
+    if ((ret = envid2env(envid, &env, 0)) < 0) return ret;
     env->env_pgfault_handler = func;
     env->env_xstacktop = xstacktop;
 	return 0;
