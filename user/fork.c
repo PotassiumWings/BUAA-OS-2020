@@ -135,7 +135,7 @@ duppage(u_int envid, u_int pn)
 	u_int addr = pn << PGSHIFT;
 	u_int perm = ((Pte*)(*vpt))[pn] & 0xfff;
     // writef("\nduppage, envid %d, pn %d, addr 0x%x, perm %d\n", envid, pn, addr, perm);
-    if (!(perm & PTE_R) || (perm & PTE_LIBRARY)) {
+    /*if (!(perm & PTE_R) || (perm & PTE_LIBRARY)) {
         if (syscall_mem_map(0, addr, envid, addr, perm) < 0)
             user_panic("??? duppage failed");
     } else {
@@ -145,8 +145,29 @@ duppage(u_int envid, u_int pn)
             if (syscall_mem_map(0, addr, 0, addr, perm | PTE_COW) < 0)
                 user_panic("??? duppage failed 3");
         }
-    }
+    }*/
 
+    perm = ((*vpt)[pn])&0xfff;
+	if((perm&PTE_LIBRARY)||(perm&PTE_R)==0||(perm&PTE_COW)){
+//		writef("start map in duppage\n");
+		ret=syscall_mem_map(0,addr,envid,addr,perm);
+//		writef("end map in duppage\n");
+		if(ret<0){
+			user_panic("duppage error\n");
+		}
+	}else{
+//		writef("start map in duppage2\n");
+		ret=syscall_mem_map(0,addr,0,addr,perm|PTE_COW);
+		if(ret<0){
+			user_panic("duppage error\n");
+		}
+//		writef("middle\n");
+		ret=syscall_mem_map(0,addr,envid,addr,perm|PTE_COW);
+		if(ret<0){
+			user_panic("duppage error\n");
+		}
+//		writef("end\n");
+	}
 	//	user_panic("duppage not implemented");
 }
 
