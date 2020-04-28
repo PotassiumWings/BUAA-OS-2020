@@ -181,14 +181,14 @@ fork(void)
         return 0;
     }
     u_int j;
-    /*for (i = 0; i < USTACKTOP; i += PDMAP) {
+    for (i = 0; i < USTACKTOP; i += PDMAP) {
         if ((*vpd)[PDX(i)]) {
             for (j = 0; j < PDMAP && i + j < USTACKTOP; j += BY2PG) {
                 if ((*vpt)[VPN(i + j)])
                     duppage(newenvid, VPN(i + j));
             }
         }
-    }*/
+    }/*
     for (i = 0; i < USTACKTOP; i+=BY2PG) {
         //writef("now:0x%x ",i);
         if (((Pde*)((*vpd))[i >> PDSHIFT] ) &&
@@ -196,7 +196,7 @@ fork(void)
             duppage(newenvid, VPN(i));
             // writef("valid:%d ",i);
         }
-    }
+    }*/
     //writef("1");
     if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0)
         user_panic("fork alloc f");
