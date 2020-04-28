@@ -147,6 +147,7 @@ duppage(u_int envid, u_int pn)
         }
     }*/
 
+    u_int ret;
     perm = ((*vpt)[pn])&0xfff;
 	if((perm&PTE_LIBRARY)||(perm&PTE_R)==0||(perm&PTE_COW)){
 //		writef("start map in duppage\n");
