@@ -26,7 +26,7 @@ void sched_yield(void)
      *     and set count = e->env_pri
      *  3. count--
      *  4. env_run()
-     *
+     * 
      *  functions or macros below may be used (not all):
      *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
      */
@@ -39,10 +39,10 @@ void sched_yield(void)
             point = 1 - point;
         }
         if (LIST_EMPTY(&env_sched_list[point])) {
-            continue;//return;
+            //continue;//return;
             panic("haha! You have no runnable env!");
         }
-        while (!LIST_EMPTY(&env_sched_list[point])) {
+        //while (!LIST_EMPTY(&env_sched_list[point])) {
             e = LIST_FIRST(&env_sched_list[point]);
             if (e->env_status == ENV_RUNNABLE) {
                 count = e->env_pri;
@@ -55,7 +55,7 @@ void sched_yield(void)
                 LIST_REMOVE(e, env_sched_link);
                 LIST_INSERT_HEAD(&env_sched_list[1 - point], e, env_sched_link);
             }
-        }
+        //}
         //printf("yield: inside! now count: %d\n",count);
     }
     //printf("yield: outside!\n");
@@ -118,3 +118,4 @@ void sched_yield(void)
 	env_run(curenv);
 	panic("^^^^^^sched yield reached end^^^^^^");*/
 }
+
