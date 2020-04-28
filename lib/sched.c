@@ -39,6 +39,7 @@ void sched_yield(void)
             point = 1 - point;
         }
         if (LIST_EMPTY(&env_sched_list[point])) {
+            continue;//return;
             panic("haha! You have no runnable env!");
         }
         while (!LIST_EMPTY(&env_sched_list[point])) {
