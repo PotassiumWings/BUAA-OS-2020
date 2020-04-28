@@ -47,13 +47,13 @@ void sched_yield(void)
             if (e->env_status == ENV_RUNNABLE) {
                 count = e->env_pri;
                 LIST_REMOVE(e, env_sched_link);
-                LIST_INSERT_HEAD(&env_sched_list[1 - point], e, env_sched_link);
+                LIST_INSERT_TAIL(&env_sched_list[1 - point], e, env_sched_link);
                 break;
             } else if (e->env_status == ENV_FREE) {
                 LIST_REMOVE(e, env_sched_link);
             } else {
                 LIST_REMOVE(e, env_sched_link);
-                LIST_INSERT_HEAD(&env_sched_list[1 - point], e, env_sched_link);
+                LIST_INSERT_TAIL(&env_sched_list[1 - point], e, env_sched_link);
             }
         //}
         //printf("yield: inside! now count: %d\n",count);
