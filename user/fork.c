@@ -175,8 +175,9 @@ fork(void)
     set_pgfault_handler(pgfault);
 	//alloc a new alloc
     newenvid = syscall_env_alloc();
+    env = envs + ENVX(syscall_getenvid());
     if (newenvid == 0) { // son
-        env = envs + ENVX(syscall_getenvid());
+        //env = envs + ENVX(syscall_getenvid());
         return 0;
     }
     u_int j;
