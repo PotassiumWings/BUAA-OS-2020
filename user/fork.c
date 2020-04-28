@@ -134,7 +134,7 @@ duppage(u_int envid, u_int pn)
 {
 	u_int addr = pn << PGSHIFT;
 	u_int perm = ((Pte*)(*vpt))[pn] & 0xfff;
-    //writef("duppage, envid %d, pn %d, addr 0x%x, perm %d\n", envid, pn, addr, perm);
+    // writef("\nduppage, envid %d, pn %d, addr 0x%x, perm %d\n", envid, pn, addr, perm);
     if (!(perm & PTE_R) || (perm & PTE_LIBRARY)) {
         if (syscall_mem_map(0, addr, envid, addr, perm) < 0)
             user_panic("??? duppage failed");
@@ -180,19 +180,32 @@ fork(void)
         env = envs + ENVX(syscall_getenvid());
         return 0;
     }
+    u_int j;
+    /*for (i = 0; i < USTACKTOP; i += PDMAP) {
+        if ((*vpd)[PDX(i)]) {
+            for (j = 0; j < PDMAP && i + j < USTACKTOP; j += BY2PG) {
+                if ((*vpt)[VPN(i + j)])
+                    duppage(newenvid, VPN(i + j));
+            }
+        }
+    }*/
     for (i = 0; i < USTACKTOP; i+=BY2PG) {
-        if ((((Pde*)(*vpd))[i >> PDSHIFT] & PTE_V) &&
-            (((Pte*)(*vpt))[i >> PGSHIFT] & PTE_V)) {
+        //writef("now:0x%x ",i);
+        if (((Pde*)((*vpd))[i >> PDSHIFT] ) &&
+            (((Pte*)(*vpt))[i >> PGSHIFT] )) {
             duppage(newenvid, VPN(i));
+            // writef("valid:%d ",i);
         }
     }
+    //writef("1");
     if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0)
         user_panic("fork alloc f");
     if (syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, UXSTACKTOP) < 0)
         user_panic("fork pg f");
     if (syscall_set_env_status(newenvid, ENV_RUNNABLE) < 0)
         user_panic("fork set f");
-	return newenvid;
+	//writef("fork end!haha!envid %d ",newenvid);
+    return newenvid;
 }
 
 // Challenge!

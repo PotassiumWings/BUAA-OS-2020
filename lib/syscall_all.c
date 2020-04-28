@@ -277,9 +277,14 @@ int sys_set_env_status(int sysno, u_int envid, u_int status)
     if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE && status != ENV_FREE) 
         return -E_INVAL;
     if ((ret = envid2env(envid, &env, 1)) < 0) return ret;
-    if (status == ENV_FREE) env_destroy(env);
-    else env->env_status = status;
-	return 0;
+    if (status == ENV_RUNNABLE && env->env_status != ENV_RUNNABLE)
+        LIST_INSERT_HEAD(&env_sched_list[0], env, env_sched_link);
+    else if (status != ENV_RUNNABLE && env->env_status == ENV_RUNNABLE)
+        LIST_REMOVE(env, env_sched_link);
+    
+    env->env_status = status;
+
+    return 0;
 	//	panic("sys_env_set_status not implemented");
 }
 
