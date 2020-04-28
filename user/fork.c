@@ -171,7 +171,6 @@ fork(void)
 	u_int i;
     //writef("fork\n");
 
-
 	//The parent installs pgfault using set_pgfault_handler
     set_pgfault_handler(pgfault);
 	//alloc a new alloc
