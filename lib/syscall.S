@@ -52,17 +52,17 @@ NESTED(handle_sys,TF_SIZE, sp)
     //sw t4, 20(sp)
     
     lw a1, TF_REG5(sp)  // a1 = parameter count
-    mov t6, 0            // t6 = sp jump delta
+    move t6, zero       // t6 = sp jump delta
     addi t7, t6, 4      // t7 = 4
 
     ble a1, t7, NO_SV   // no need to change sp, count <= 4
     nop
-    mov t6, a1           // t6 = count
+    move t6, a1         // t6 = count
     sll t6, t6, 2       // t6 = count * 4
 
     subu sp, sp, t6     // sp move t6
 
-    mov t3, 0            // t3 = 0
+    move t3, zero       // t3 = 0
     addi t4, t0, 16     // t4 = 16 + t0 (from)
     addi t5, sp, 16     // t5 = 16 + sp (to)
 
@@ -92,7 +92,7 @@ NO_SV:
     
     // TODO: Resume current kernel stack
 
-    addiu sp, sp, t6    // sp move t6
+    addu sp, sp, t6    // sp move t6
 
     
     sw      v0, TF_REG2(sp)             // Store return value of function sys_* (in $v0) into trapframe
