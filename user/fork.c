@@ -135,21 +135,21 @@ duppage(u_int envid, u_int pn)
 	u_int addr = pn << PGSHIFT;
 	u_int perm = ((Pte*)(*vpt))[pn] & 0xfff;
     if (!(perm & PTE_V)) return;
-    /*if ((perm & PTE_R) && !(perm & PTE_LIBRARY)) perm |= PTE_COW;
+    if ((perm & PTE_R) && !(perm & PTE_LIBRARY)) perm |= PTE_COW;
     if (syscall_mem_map(0, addr, envid, addr, perm) < 0) user_panic("map panic 1");
-    if (syscall_mem_map(0, addr, 0, addr, perm) < 0) user_panic("map panic 1");*/
+    if (syscall_mem_map(0, addr, 0, addr, perm) < 0) user_panic("map panic 1");
     // writef("\nduppage, envid %d, pn %d, addr 0x%x, perm %d\n", envid, pn, addr, perm);
-    if (!(perm & PTE_R) || (perm & PTE_LIBRARY)) {
+    /*if (!(perm & PTE_R) || (perm & PTE_LIBRARY)) {
         if (syscall_mem_map(0, addr, envid, addr, perm) < 0)
             user_panic("??? duppage failed");
     } else {
+        if (syscall_mem_map(0, addr, envid, addr, perm | PTE_COW) < 0) 
+            user_panic("??? duppage failed 2");
         if ((perm & PTE_COW) == 0) {
             if (syscall_mem_map(0, addr, 0, addr, perm | PTE_COW) < 0)
                 user_panic("??? duppage failed 3");
         }
-        if (syscall_mem_map(0, addr, envid, addr, perm | PTE_COW) < 0) 
-            user_panic("??? duppage failed 2");
-    }
+    }*/
 	//	user_panic("duppage not implemented");
 }
 
@@ -175,9 +175,11 @@ fork(void)
     //writef("fork\n");
 
 	//The parent installs pgfault using set_pgfault_handler
-    set_pgfault_handler(pgfault);
+    //set_pgfault_handler(pgfault);
 	//alloc a new alloc
     newenvid = syscall_env_alloc();
+    set_pgfault_handler(pgfault);
+
     env = envs + ENVX(syscall_getenvid());
     if (newenvid == 0) { // son
         //env = envs + ENVX(syscall_getenvid());
