@@ -175,10 +175,10 @@ fork(void)
     //writef("fork\n");
 
 	//The parent installs pgfault using set_pgfault_handler
-    //set_pgfault_handler(pgfault);
+    set_pgfault_handler(pgfault);
 	//alloc a new alloc
     newenvid = syscall_env_alloc();
-    set_pgfault_handler(pgfault);
+    //set_pgfault_handler(pgfault);
 
     env = envs + ENVX(syscall_getenvid());
     if (newenvid == 0) { // son
