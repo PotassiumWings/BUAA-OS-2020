@@ -4,7 +4,7 @@
 #include <env.h>
 #include <trap.h>
 int syscall_super_multi_parameter(u_int a, u_int b, u_int c, u_int d, u_int e, u_int f, u_int g, u_int h) {
-    return msyscall(SYS_smp, 7, b,c,d,e,f,g,h);
+    return msyscall(SYS_smp, 8, a,b,c,d,e,f,g,h);
 }
 
 void syscall_putchar(char ch)
