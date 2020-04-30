@@ -6,7 +6,7 @@
 #include <sched.h>
 
 extern char *KERNEL_SP;
-extern struct Env *curenv
+extern struct Env *curenv;
 
 /* Overview:
  * 	This function is used to print a character on screen.
