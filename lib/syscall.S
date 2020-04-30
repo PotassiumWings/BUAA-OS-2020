@@ -49,7 +49,7 @@ NESTED(handle_sys,TF_SIZE, sp)
     lw a3, 16(t0)
     
     lw t9, TF_REG5(sp)  // t9 = parameter count
-    addiu t6, t9, 2     // t6 = count + 2
+    addiu t6, t9, 1     // t6 = count + 2
     sll t6, t6, 2       // t6 = count * 4 + 8
 
     subu sp, sp, t6     // sp move t6

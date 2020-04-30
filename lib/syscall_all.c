@@ -6,11 +6,8 @@
 #include <sched.h>
 
 extern char *KERNEL_SP;
-extern struct Env *curenv;
-/*
-int syscall_super_multi_parameter(u_int a, u_int b, u_int c, u_int d, u_int e, u_int f, u_int g, u_int h){
-    
-}*/
+extern struct Env *curenv
+
 /* Overview:
  * 	This function is used to print a character on screen.
  * 
