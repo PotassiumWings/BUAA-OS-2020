@@ -391,3 +391,30 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	return 0;
 }
 
+int sys_ipc_can_multi_send(int sysno, u_int value, u_int srcva, u_int perm,
+                           int env_count, ...) {
+    va_list ap;
+    va_start(ap, env_count);
+    if (srcva >= UTOP) return -E_INVAL;
+    int i;
+    int r=0;
+    struct Page *p;
+    struct Env *e;
+    if(srcva){
+        Pte *pte;
+        p=page_lookup(curenv->env_pgdir,srcva,&pte);
+        if(p==NULL)return -E_INVAL;
+    }
+    for(i=0;i<env_count;i++){
+        int envid=va_arg(ap,int);
+        if((r=envid2env(envid,&e,0)) < 0)return r;
+        if(e->env_ipc_recving == 0)return -E_IPC_NOT_RECV;
+    }
+    va_end(ap);
+    va_start(ap,env_count);
+    for(i=0;i<env_count;i++){
+        int envid=va_arg(ap,int);
+        sys_ipc_can_send(sysno,envid,value,srcva,perm);
+    }
+    return 0;
+}

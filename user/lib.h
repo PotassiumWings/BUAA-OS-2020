@@ -43,6 +43,8 @@ void user_bzero(void *v, u_int n);
 //////////////////////////////////////////////////syscall_lib
 extern int msyscall(int, int, ...);
 
+int syscall_ipc_can_multi_send(u_int value, u_int srcva, u_int perm, int env_count, ...);
+
 void syscall_putchar(char ch);
 u_int syscall_getenvid(void);
 void syscall_yield(void);

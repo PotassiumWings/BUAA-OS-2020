@@ -7,6 +7,8 @@ void umain()
 	int id = 0;
     int i;
 
+    syscall_ipc_can_multi_send(1, 4, 0, 10, 1,2,3,4,5,6,7,8,9,10);
+
 	if ((id = fork()) == 0) {
 		if ((id = fork()) == 0) {
 			a += 3;

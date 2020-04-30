@@ -106,3 +106,61 @@ nop
 		jr	k0			//
 		lw	sp,TF_REG29(sp)  /* Deallocate stack */  
 
+LEAF(syscall_ipc_can_multi_send)
+    
+    move t0,a3       // count
+    move t2,a3       // count
+    addiu t0,t0,6   // count+6
+    sll t0,t0,2     // count+6 << 2
+
+    subu sp,sp,t0
+
+    sw t0,0(sp)     // sp+0 save delta sp
+    sw ra,4(sp)     // sp+4 save ra
+
+    move t1,a2       // t1=perm
+    sw t1,16(sp)    // perm->16(sp)
+
+    move t1,a3       // t1=count
+    sw t1,20(sp)    // count->20(sp)
+
+    move a3,a1       // srcva->a3
+    move a2,a0       // value->a2
+    addiu a1,t2,4   // a1 = count + 4
+    addiu a0, zero, 9543//SYS_ipc_can_multi_send
+
+    move t1,zero     // t1=0
+    addiu t3,t0,16  // t3=t0+16
+    addiu t4,sp,24  // t4=sp+24
+    addu t3,t3,sp  // t3=sp+t0+16
+loop_t1:
+    bge t1,t2,loop_t1_out   // parameter count
+    nop
+
+    lw t5,0(t3)
+    sw t5,0(t4)
+
+    addiu t1,t1,1
+    addiu t3,t3,4
+    addiu t4,t4,4
+
+    j loop_t1
+    nop
+
+loop_t1_out:
+
+
+    jal msyscall
+    nop
+
+
+    lw t0,0(sp)
+    lw ra,4(sp)
+
+    addu sp,sp,t0
+
+    jr ra
+    nop
+
+END(syscall_ipc_can_multi_send)
+
