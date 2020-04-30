@@ -8,7 +8,7 @@
 extern char aoutcode[];
 extern char boutcode[];
 
-void sys_super_multi_parameter(int,int,int,int,int,int,int);
+int sys_super_multi_parameter(int,int,int,int,int,int,int);
 
 void mips_init()
 {
