@@ -12,17 +12,11 @@ NESTED(handle_sys,TF_SIZE, sp)
     .set at                             // Resume use of $at
 
     // TODO: Fetch EPC from Trapframe, calculate a proper value and store it back to trapframe.
-    
-    lw t0, TF_EPC(sp)
-    addiu t0,t0,4
-    sw t0, TF_EPC(sp)
-
-
+	lw		t0, TF_EPC(sp)
+	addiu	t0, t0, 4
+	sw		t0, TF_EPC(sp)
     // TODO: Copy the syscall number into $a0.
-    
-    lw a0, TF_REG4(sp)  // first parameter: a0, 4
-
-
+	lw		a0, TF_REG4(sp) 
     addiu   a0, a0, -__SYSCALL_BASE     // a0 <- relative syscall number
     sll     t0, a0, 2                   // t0 <- relative syscall number times 4
     la      t1, sys_call_table          // t1 <- syscall table base
@@ -30,61 +24,80 @@ NESTED(handle_sys,TF_SIZE, sp)
     lw      t2, 0(t1)                   // t2 <- function entry of specific syscall
 
     lw      t0, TF_REG29(sp)            // t0 <- user's stack pointer
-    //lw      t3, 16(t0)                  // t3 <- the 5th argument of msyscall
-    //lw      t4, 20(t0)                  // t4 <- the 6th argument of msyscall
+	lw      t3, TF_REG5(sp)                  // t3 <- 参数数量
+    li      t5, 0
+    
+    // add a0-a3
+    lw          a0, TF_REG4(sp)
+    lw          a1, TF_REG6(sp)
+    lw          a2, TF_REG7(sp)
+    lw          a3, 16(t0)
+    
+    get_sp_pos:
+    	beq t5,t3,end_get_sp_pos
+    	nop
+    	addiu sp,sp,-4
+    	addiu t5,t5,1
+    	j get_sp_pos
+    	nop
+    end_get_sp_pos:
+    addiu sp,sp,-4
+
+    sw t3,0(sp)
+    li t5,3
+    addiu t6,t0,20
+    addiu t7,sp,16
+    
+    add_to_sp:
+		ble t3,t5,end_add_to_sp
+		nop
+		lw t8,0(t6)
+		sw t8,0(t7)
+		addiu t6,t6,4
+		addiu t7,t7,4
+		addiu t5,t5,1
+		j add_to_sp
+		nop
+	end_add_to_sp:
+	
+        /*
+    lw      t3, 16(t0)                  // t3 <- the 5th argument of msyscall
+    lw      t4, 20(t0)                  // t4 <- the 6th argument of msyscall
 
     // TODO: Allocate a space of six arguments on current kernel stack and copy the six arguments to proper location
- 
-    //lw a0, TF_REG4(sp)
-    //lw a1, TF_REG5(sp)
-    //lw a2, TF_REG6(sp)
-    //lw a3, TF_REG7(sp)
-    //addiu sp, sp, -24
-    //sw t3, 16(sp)
-    //sw t4, 20(sp)
-
-    lw a0, TF_REG4(sp)
-    lw a1, TF_REG6(sp)
-    lw a2, TF_REG7(sp)
-    lw a3, 16(t0)
-    
-    lw t9, TF_REG5(sp)  // t9 = parameter count
-    addiu t6, t9, 1     // t6 = count + 2
-    sll t6, t6, 2       // t6 = count * 4 + 8
-
-    subu sp, sp, t6     // sp move t6
-    sw t6, 0(sp)
-
-    addiu t3, zero, 4   // t3 = 4
-    addiu t4, t0, 20    // t4 = 16 + t0 (from)
-    addiu t5, sp, 16    // t5 = 16 + sp (to)
-
-loop_cnt:
-    bgt t3, t9, loop_cnt_end    // t3 < a1
-    nop
-    
-    lw s0, 0(t4)
-    sw s0, 0(t5)
-
-    addiu t3, t3, 1
-    addiu t4, t4, 4
-    addiu t5, t5, 4
-
-    j loop_cnt
-    nop
+    	lw          a0, TF_REG4(sp)
+        lw              a1, TF_REG5(sp)
+        lw              a2, TF_REG6(sp)
+        lw              a3, TF_REG7(sp)
+        addiu   sp, sp, -24
+        sw              t3, 16(sp)
+        sw              t4, 20(sp)
+        addiu   sp, sp, -24
+        sw      a0, 0(sp)
+        sw      a1, 4(sp)
+        sw      a2, 8(sp)
+        sw      a3, 12(sp)
+        sw      t3, 16(sp)
+        sw      t4, 20(sp)*/
 
 
-loop_cnt_end:
-   
     jalr    t2                          // Invoke sys_* function
     nop
-    
+
     // TODO: Resume current kernel stack
+    //    addiu   sp, t7,16
+    lw      t0,0(sp);
+	li t1,0
+	renew_sp:
+		beq t1,t0,end_renew
+		nop
+		addiu sp,sp,4
+		addiu t1,t1,1
+		j renew_sp
+		nop
+	end_renew:
+	addiu sp,sp,4	
 
-    lw t6, 0(sp)
-    addu sp, sp, t6    // sp move t6
-
-    
     sw      v0, TF_REG2(sp)             // Store return value of function sys_* (in $v0) into trapframe
 
     j       ret_from_exception          // Return from exeception
@@ -108,3 +121,5 @@ sys_call_table:                         // Syscall Table
     .word sys_ipc_can_send
     .word sys_ipc_recv
     .word sys_cgetc
+	.word sys_super_multi_parameter
+
