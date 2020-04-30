@@ -34,15 +34,7 @@ NESTED(handle_sys,TF_SIZE, sp)
     //lw      t4, 20(t0)                  // t4 <- the 6th argument of msyscall
 
     // TODO: Allocate a space of six arguments on current kernel stack and copy the six arguments to proper location
-
-    //addiu sp, sp, -24
-    //sw a0, 0(sp)
-    //sw a1, 4(sp)
-    //sw a2, 8(sp)
-    //sw a3, 12(sp)
-    //sw t3, 16(sp)
-    //sw t4, 20(sp)
-    
+ 
     //lw a0, TF_REG4(sp)
     //lw a1, TF_REG5(sp)
     //lw a2, TF_REG6(sp)
@@ -50,24 +42,25 @@ NESTED(handle_sys,TF_SIZE, sp)
     //addiu sp, sp, -24
     //sw t3, 16(sp)
     //sw t4, 20(sp)
-    
-    lw a1, TF_REG5(sp)  // a1 = parameter count
-    move t6, zero       // t6 = sp jump delta
-    addi t7, t6, 4      // t7 = 4
 
-    ble a1, t7, NO_SV   // no need to change sp, count <= 4
-    nop
-    move t6, a1         // t6 = count
-    sll t6, t6, 2       // t6 = count * 4
+    lw a0, TF_REG4(sp)
+    lw a1, TF_REG6(sp)
+    lw a2, TF_REG7(sp)
+    lw a3, 16(t0)
+    
+    lw t9, TF_REG5(sp)  // t9 = parameter count
+    addiu t6, t9, 2     // t6 = count + 2
+    sll t6, t6, 2       // t6 = count * 4 + 8
 
     subu sp, sp, t6     // sp move t6
+    sw t6, 0(sp)
 
-    move t3, zero       // t3 = 0
-    addi t4, t0, 16     // t4 = 16 + t0 (from)
-    addi t5, sp, 16     // t5 = 16 + sp (to)
+    addiu t3, zero, 4   // t3 = 4
+    addiu t4, t0, 20    // t4 = 16 + t0 (from)
+    addiu t5, sp, 16    // t5 = 16 + sp (to)
 
 loop_cnt:
-    bge t3, a1, loop_cnt_end    // t3 < a1
+    bgt t3, t9, loop_cnt_end    // t3 < a1
     nop
     
     lw s0, 0(t4)
@@ -82,16 +75,13 @@ loop_cnt:
 
 
 loop_cnt_end:
-NO_SV:
-    
-
-
-    
+   
     jalr    t2                          // Invoke sys_* function
     nop
     
     // TODO: Resume current kernel stack
 
+    lw t6, 0(sp)
     addu sp, sp, t6    // sp move t6
 
     
