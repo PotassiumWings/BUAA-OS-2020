@@ -78,6 +78,7 @@ int strcmp(const char *p, const char *q);
 // ipc.c
 void	ipc_send(u_int whom, u_int val, u_int srcva, u_int perm);
 u_int	ipc_recv(u_int *whom, u_int dstva, u_int *perm);
+int ipc_send_double(u_int envid_1,u_int envid_2,u_int value,u_int srcva,u_int perm);
 
 // wait.c
 void wait(u_int envid);
