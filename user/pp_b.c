@@ -8,7 +8,8 @@ umain(void)
 {
         u_int w1,w2, i,j;
 
-        ipc_send_double(0x800,0x1802,0,0,0);
+        u_int x=0x800,y=0x1802;
+        ipc_send_double(x,y,0,0,0);
         
         for (;;) {
                 writef("%x am waiting.....\n", syscall_getenvid());
