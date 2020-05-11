@@ -188,6 +188,27 @@ read(int fdnum, void *buf, u_int n)
 	int r;
 	struct Dev *dev;
 	struct Fd *fd;
+	
+    if ((r = fd_lookup(fdnum, &fd)) < 0
+		||  (r = dev_lookup(fd->fd_dev_id, &dev)) < 0) {
+		return r;
+	}
+
+	if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) {
+		writef("[%08x] read %d -- bad mode\n", env->env_id, fdnum);
+		return -E_INVAL;
+	}
+
+	if (debug) writef("read %d %p %d via dev %s\n",
+						  fdnum, buf, n, dev->dev_name);
+
+	r = (*dev->dev_read)(fd, buf, n, fd->fd_offset);
+
+	if (r > 0) {
+		fd->fd_offset += r;
+        ((char*)buf)[r]='\0';
+	}
+
 
 	// Similar to 'write' function.
 	// Step 1: Get fd and dev.
