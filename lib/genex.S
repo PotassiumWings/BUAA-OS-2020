@@ -84,7 +84,7 @@ timer_irq:
 cons_irq:
 	lb a0,0xb0000000(zero)
 	mfc0 a1,CP0_STATUS
-	j handle_cons_ir
+	jal handle_cons_ir
 	nop
 	j ret_from_exception
 	nop
