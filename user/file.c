@@ -118,6 +118,7 @@ int modify_file(int fdnum,char* buf,int length){
 	struct Fd *fd;
 	int r;
 	if((r=fd_lookup(fdnum,&fd))<0)return r;
+	fd->fd_offset=0;
 	struct Filefd *f=(struct Filefd*)fd;
 	f->f_file.f_modifycount++;
 	if((r=write(fdnum,buf,length))<0)return r;
