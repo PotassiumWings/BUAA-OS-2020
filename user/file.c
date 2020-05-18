@@ -118,7 +118,7 @@ int print_file(int fdnum, int length){
 int modify_file(int fdnum,char* buf,int length){
 	struct Fd *fd;
 	int r;
-	if((r=fd_lookup(fdnum,fd))<0)return r;
+	if((r=fd_lookup(fdnum,&fd))<0)return r;
 	struct Filefd *f=(struct Filefd*)fd;
 	int size=f->f_file.f_size;
 	if(length>size)return -E_INVAL;
