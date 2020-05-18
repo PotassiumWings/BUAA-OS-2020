@@ -120,7 +120,7 @@ int modify_file(int fdnum,char* buf,int length){
 	if((r=fd_lookup(fdnum,&fd))<0)return r;
 	struct Filefd *f=(struct Filefd*)fd;
 	f->f_file.f_modifycount++;
-	if((r=file_write(fd,buf,length,0))<0)return r;
+	if((r=write(fdnum,buf,length))<0)return r;
 	return f->f_file.f_modifycount;
 }
 
