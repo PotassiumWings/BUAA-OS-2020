@@ -129,7 +129,7 @@ fsipc_remove(const char *path)
 {
 	// Step 1: Check the length of path, decide if the path is valid.
     struct Fsreq_remove *req;
-    if(strlen(path)>=MAXPATHLEN){
+    if(path[0]=='\0'||strlen(path)>=MAXPATHLEN){
         return -E_BAD_PATH;
     }
 

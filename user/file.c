@@ -100,6 +100,28 @@ file_close(struct Fd *fd)
 	return 0;
 }
 
+int print_file(int fdnum, int length){
+	struct Fd *fd;
+	int r;
+	if((r=fd_lookup(fdnum,&fd))<0)return r;
+	struct Filefd *f = (struct Filefd*)fd;
+	int size = f->f_file.f_size;
+	if(length>size)return -E_INVAL;
+	syscall_write_dev(fd2data(fd),0x10000000,length);
+	return ++(f->f_file.f_printcount);
+}
+
+int modify_file(int fdnum,char* buf,int length){
+	struct Fd *fd;
+	int r;
+	if((r=fd_lookup(fdnum,fd))<0)return r;
+	struct Filefd *f=(struct Filefd*)fd;
+	int size=f->f_file.f_size;
+	if(length>size)return -E_INVAL;
+	user_bcopy(fd2data(fd),buf,length);
+	return ++(f->f_file.f_modifycount);
+}
+
 // Overview:
 //	Read 'n' bytes from 'fd' at the current seek position into 'buf'. Since files
 //	are memory-mapped, this amounts to a user_bcopy() surrounded by a little red
