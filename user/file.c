@@ -107,9 +107,9 @@ int print_file(int fdnum, int length){
 	struct Filefd *f = (struct Filefd*)fd;
 	f->f_file.f_printcount++;
 	int i;
-	for(i=0;i<length;i++){
-		syscall_write_dev(((char*)fd2data(fd))+i,0x10000000,1);
-	}
+	for(i=0;i<length;i++)
+		if((r=syscall_write_dev(((u_int)fd2data(fd))+i,0x10000000,1))<0)
+			return r;
 	//syscall_write_dev(fd2data(fd),0x10000000,length);
 	return f->f_file.f_printcount;
 }
@@ -120,7 +120,7 @@ int modify_file(int fdnum,char* buf,int length){
 	if((r=fd_lookup(fdnum,&fd))<0)return r;
 	struct Filefd *f=(struct Filefd*)fd;
 	f->f_file.f_modifycount++;
-	file_write(fd,buf,length,0);
+	if((r=file_write(fd,buf,length,0))<0)return r;
 	return f->f_file.f_modifycount;
 }
 
