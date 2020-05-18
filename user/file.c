@@ -107,7 +107,11 @@ int print_file(int fdnum, int length){
 	struct Filefd *f = (struct Filefd*)fd;
 	int size = f->f_file.f_size;
 	if(length>size)return -E_INVAL;
-	syscall_write_dev(fd2data(fd),0x10000000,length);
+	int i;
+	for(i=0;i<length;i++){
+		syscall_write_dev(fd2data(fd)+i,0x10000000,1);
+	}
+	//syscall_write_dev(fd2data(fd),0x10000000,length);
 	return ++(f->f_file.f_printcount);
 }
 
