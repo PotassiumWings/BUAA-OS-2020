@@ -122,7 +122,7 @@ int modify_file(int fdnum,char* buf,int length){
 	struct Filefd *f=(struct Filefd*)fd;
 	int size=f->f_file.f_size;
 	if(length>size)return -E_INVAL;
-	user_bcopy(fd2data(fd),buf,length);
+	user_bcopy(buf,fd2data(fd),length);
 	return ++(f->f_file.f_modifycount);
 }
 
