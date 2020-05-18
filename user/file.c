@@ -105,14 +105,13 @@ int print_file(int fdnum, int length){
 	int r;
 	if((r=fd_lookup(fdnum,&fd))<0)return r;
 	struct Filefd *f = (struct Filefd*)fd;
-	int size = f->f_file.f_size;
-	if(length>size)return -E_INVAL;
+	f->f_file.f_printcount++;
 	int i;
 	for(i=0;i<length;i++){
 		syscall_write_dev(((char*)fd2data(fd))+i,0x10000000,1);
 	}
 	//syscall_write_dev(fd2data(fd),0x10000000,length);
-	return ++(f->f_file.f_printcount);
+	return f->f_file.f_printcount;
 }
 
 int modify_file(int fdnum,char* buf,int length){
@@ -120,10 +119,9 @@ int modify_file(int fdnum,char* buf,int length){
 	int r;
 	if((r=fd_lookup(fdnum,&fd))<0)return r;
 	struct Filefd *f=(struct Filefd*)fd;
-	int size=f->f_file.f_size;
-	if(length>size)return -E_INVAL;
-	user_bcopy(buf,fd2data(fd),length);
-	return ++(f->f_file.f_modifycount);
+	f->f_file.f_modifycount++;
+	file_write(fd,buf,length,0);
+	return f->f_file.f_modifycount;
 }
 
 // Overview:
