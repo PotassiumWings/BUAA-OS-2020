@@ -28,6 +28,7 @@ void mips_init()
 	ENV_CREATE(user_testpipe);
 	//ENV_CREATE(user_testpiperace);
 	ENV_CREATE(fs_serv);
+	ENV_CREATE(user_testbeforespawn);
 
 	//ENV_CREATE(user_icode);
 	trap_init();
