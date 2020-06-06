@@ -17,7 +17,7 @@ void sched_yield(void)
     //return;
     static int count = 0; // remaining time slices of current env
     static int point = 0; // current env_sched_list index
-    //printf("in yield!");return;
+    //printf("in yield!");//return;
     /*  hint:
      *  1. if (count==0), insert `e` into `env_sched_list[1-point]`
      *     using LIST_REMOVE and LIST_INSERT_TAIL.
@@ -62,6 +62,7 @@ void sched_yield(void)
     //printf("yield: id:%d pid:%d status:%d pgdir:0x%x\n",e->env_id, e->env_parent_id, e->env_status, e->env_pgdir);
     count--;
     assert(e!=NULL);
+    //printf("yield end");
     env_run(e);
     /*
     static int cur_lasttime = 1;
