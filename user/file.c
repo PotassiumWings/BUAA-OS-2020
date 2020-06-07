@@ -53,7 +53,7 @@ open(const char *path, int mode)
     fileid=ffd->f_fileid;
 
 	// Step 4: Alloc memory, map the file content into memory.
-	for(i=0;i<size;i++)if((r=fsipc_map(fileid,i,va+i))<0)return r;
+	for(i=0;i<size;i+=BY2BLK)if((r=fsipc_map(fileid,i,va+i))<0)return r;
 
 	// Step 5: Return the number of file descriptor.
     return fd2num(fd);
