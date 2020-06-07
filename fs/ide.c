@@ -6,16 +6,6 @@
 #include "lib.h"
 #include <mmu.h>
 
-
-#define IDE_BEGIN_ADDR 0x13000000
-#define IDE_OFFSET_ADDR IDE_BEGIN_ADDR + 0x0000
-#define IDE_OFFSETHI_ADDR IDE_BEGIN_ADDR + 0x0008
-#define IDE_ID_ADDR IDE_BEGIN_ADDR + 0x0010
-#define IDE_OP_ADDR IDE_BEGIN_ADDR + 0x0020
-#define IDE_STATUS_ADDR IDE_BEGIN_ADDR + 0x0030
-#define IDE_BUFFER_ADDR IDE_BEGIN_ADDR + 0x4000
-#define IDE_BUFFER_SIZE 0x0200
-
 // Overview:
 // 	read data from IDE disk. First issue a read request through
 // 	disk register and then copy data from disk buffer
@@ -37,21 +27,40 @@ ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs)
 	// 0x200: the size of a sector: 512 bytes.
 	int offset_begin = secno * 0x200;
 	int offset_end = offset_begin + nsecs * 0x200;
-	int now_offset = 0;
-    int offset = 0;
+	int offset_now = offset_begin;
+	int offset = 0;
+	int op_status=0;
+	int read=0;
+	int can_read=0;
 
 	while (offset_begin + offset < offset_end) {
-            // Your code here
-            // error occurred, then panic.
-            now_offset = offset + offset_begin;
-            if(syscall_write_dev(&diskno,IDE_ID_ADDR,sizeof(u_int))<0)user_panic("ide_read f");
-            if(syscall_write_dev(&now_offset,IDE_BEGIN_ADDR,sizeof(u_int))<0)user_panic("ide_read f");
-            int status=0;
-            if(syscall_write_dev(&status,IDE_OP_ADDR,sizeof(int))<0)user_panic("ide_read f");
-            if(syscall_read_dev(&status,IDE_STATUS_ADDR,sizeof(int))<0)user_panic("ide_read f");
-            if(!status)user_panic("ide_read f");
-            if(syscall_read_dev(dst+offset,IDE_BUFFER_ADDR,IDE_BUFFER_SIZE)<0)user_panic("ide_read f");
-            offset += 0x200;
+        // Your code here
+        // error occurred, then panic.
+        offset_now=offset_begin+offset;
+        //设置id diskno
+        if(syscall_write_dev(&diskno,0x13000010,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		//设置offset
+		if(syscall_write_dev(&offset_now,0x13000000,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		//设置value
+		if(syscall_write_dev(&read,0x13000020,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		//获取操作状态status
+		if(syscall_read_dev(&op_status,0x13000030,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		if(op_status==0){
+			user_panic("read failed!\n");
+		}
+		//获取data
+		if(syscall_read_dev(dst+offset,0x13004000,0x200)!=0){
+        	user_panic("read failed!\n");
+		}
+		offset=offset+0x200;
 	}
 }
 
@@ -76,33 +85,47 @@ ide_write(u_int diskno, u_int secno, void *src, u_int nsecs)
 	// int offset_begin = ;
 	// int offset_end = ;
 	// int offset = ;
-
-	// DO NOT DELETE WRITEF !!!
-	writef("diskno: %d\n", diskno);
-	
-    int offset_begin = secno * 0x200;
+	int offset_begin = secno * 0x200;
 	int offset_end = offset_begin + nsecs * 0x200;
-	int now_offset = 0;
-    int offset = 0;
-
-	while (offset_begin + offset < offset_end) {
-            // Your code here
-            // error occurred, then panic.
-            now_offset = offset + offset_begin;
-            if(syscall_write_dev(&diskno,IDE_ID_ADDR,sizeof(u_int))<0)user_panic("ide_write f");
-            if(syscall_write_dev(&now_offset,IDE_BEGIN_ADDR,sizeof(u_int))<0)user_panic("ide_write f");
-            if(syscall_write_dev(src+offset,IDE_BUFFER_ADDR,IDE_BUFFER_SIZE)<0)user_panic("ide_write f"); 
-            int status=1;
-            if(syscall_write_dev(&status,IDE_OP_ADDR,sizeof(int))<0)user_panic("ide_write f");
-            if(syscall_read_dev(&status,IDE_STATUS_ADDR,sizeof(int))<0)user_panic("ide_write f");
-            if(!status)user_panic("ide_write f");
-            offset += 0x200;
-	}
-
+	int offset_now = offset_begin;
+	int offset = 0;
+	int op_status=0;
+	int write=1;
+	int can_read=0;
+	writef("diskno: %d\n", diskno);
 	// while ( < ) {
 	    // copy data from source array to disk buffer.
 
             // if error occur, then panic.
 	// }
+	while (offset_begin + offset < offset_end) {
+        // Your code here
+        // error occurred, then panic.
+        offset_now=offset_begin+offset;
+        //设置id diskno
+        if(syscall_write_dev(&diskno,0x13000010,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		//设置offset
+		if(syscall_write_dev(&offset_now,0x13000000,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		//写入data
+		if(syscall_write_dev(src+offset,0x13004000,0x200)!=0){
+        	user_panic("read failed!\n");
+		}
+		//写入value
+		if(syscall_write_dev(&write,0x13000020,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		//获取status
+		if(syscall_read_dev(&op_status,0x13000030,4)!=0){
+        	user_panic("write failed!\n");
+		}
+		if(op_status==0){
+			user_panic("read failed!\n");
+		}
+		offset=offset+0x200;
+	}
 }
 
