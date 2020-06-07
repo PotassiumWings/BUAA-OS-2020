@@ -14,6 +14,7 @@ void
 ipc_send(u_int whom, u_int val, u_int srcva, u_int perm)
 {
 	int r;
+	//writef("ipc_send from 0x%x, val %d, srcva0x%x ,perm0x%x\n",whom,val,srcva,perm);
 
 	while ((r=syscall_ipc_can_send(whom, val, srcva, perm)) == -E_IPC_NOT_RECV)
 	{
@@ -33,6 +34,8 @@ u_int
 ipc_recv(u_int *whom, u_int dstva, u_int *perm)
 {
 //printf("ipc_recv:come 0\n");
+	//writef("ipc_recv dstva 0x%x\n",dstva);
+
 	syscall_ipc_recv(dstva);
 	
 	if (whom)

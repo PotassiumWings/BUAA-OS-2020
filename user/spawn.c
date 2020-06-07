@@ -203,8 +203,8 @@ int spawn(char *prog, char **argv)
 		text_start+=size;
 	}
 
-	int res=0;
-	for(i=0;i<count;i++)res+=size;
+	int res=count*size;
+	//for(i=0;i<count;i++)res+=size;
 
 	struct Trapframe *tf;
 	writef("\n::::::::::spawn size : %x  sp : %x::::::::\n",res,esp);

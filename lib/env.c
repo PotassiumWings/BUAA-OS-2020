@@ -496,6 +496,9 @@ extern void lcontext(u_int contxt);
 void
 env_run(struct Env *e)
 {
+	
+	//printf("env_run: env_id %d\n",e->env_id);
+
     /*Step 1: save register state of curenv. */
     /* Hint: if there is an environment running, you should do
     *  switch the context and save the registers. You can imitate env_destroy() 's behaviors.*/
