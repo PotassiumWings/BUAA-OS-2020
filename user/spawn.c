@@ -98,107 +98,96 @@ int usr_is_elf_format(u_char *binary){
     return 0;
 }
 
-#define STAGE 0x40000000
+#define BUFPAGE (0x40000000)
+
 int 
 usr_load_elf(int fd , Elf32_Phdr *ph, int child_envid){
 	//Hint: maybe this function is useful 
 	//      If you want to use this func, you should fill it ,it's not hard
+	u_long i = 0;
+	int r;
+	u_int va=ph->p_vaddr;
 	u_int sgsize=ph->p_memsz;
 	u_int bin_size=ph->p_filesz;
-	u_int va=ph->p_vaddr;
-	u_int off = ph->p_offset;
+	u_int file_offset=ph->p_offset;
 	u_long offset = va - ROUNDDOWN(va, BY2PG);
-	int i=0;
-	int r=0;
-	char *blk=NULL;
-	if ((r = read_map(fd,off,&blk)) != 0) {
-        return r;
-    }
-	if(offset!=0){
-		r=syscall_mem_alloc(child_envid,va-offset,PTE_V|PTE_R);
-		if(r!=0){
-			return r;
-		}
-        r=syscall_mem_map(child_envid,va,0,STAGE,PTE_V|PTE_R);
-        if(r!=0){
-			return r;
-		}
-		i = MIN(BY2PG-offset,bin_size);
-		user_bcopy((void *)blk,(void *)STAGE+offset,i);
-		r=syscall_mem_unmap(0,STAGE);
-		if(r!=0){
-			return r;
-		}
-	}
-	for(;i<bin_size;i+=BY2PG){
-		r=syscall_mem_alloc(child_envid,va+i,PTE_V|PTE_R);
-		if(r!=0){
-			return r;
-		}
-		r=syscall_mem_map(child_envid,va+i,0,STAGE,PTE_V|PTE_R);
-		if(r!=0){
-			return r;
-		}
-		user_bcopy((void *)blk+i,(void *)STAGE,MIN(BY2PG,bin_size-i));
-		r=syscall_mem_unmap(0,STAGE);
-		if(r!=0){
-			return r;
-		}
-	}
-    //Step 2: alloc pages to reach `sgsize` when `bin_size` < `sgsize`.
-   // * hint: variable `i` has the value of `bin_size` now! 
+	u_char buf[BY2PG];
 
-	while(i<sgsize){
-		r=syscall_mem_alloc(child_envid,va+i,PTE_V|PTE_R);
-		if(r!=0){
-			return r;
-		}
-		i+=BY2PG;
+
+	int temp;
+	if (offset) {
+		temp = MIN(BY2PG - offset, bin_size);
+		if((r=syscall_mem_alloc(child_envid,va,PTE_V|PTE_R))<0)return r;
+		if((r=seek(fd,file_offset))<0)return r;
+		if((r=readn(fd,buf,temp))<0)return r;
+		if((r=syscall_mem_map(child_envid,va,0,BUFPAGE,PTE_V|PTE_R))<0)return r;
+		user_bcopy(buf,BUFPAGE+offset,temp);
+		if((r=syscall_mem_unmap(0,BUFPAGE))<0)return r;
+		i = temp;
 	}
-	return 0;
+	while (i < bin_size) {
+		temp = MIN(BY2PG, bin_size-i);
+		if((r=syscall_mem_alloc(child_envid,va+i,PTE_V|PTE_R))<0)return r;
+		if((r=seek(fd,file_offset+i))<0)return r;
+		if((r=readn(fd,buf,temp))<0)return r;
+		if((r=syscall_mem_map(child_envid,va+i,0,BUFPAGE,PTE_V|PTE_R))<0)return r;
+		user_bcopy(buf,BUFPAGE,temp);
+		if((r=syscall_mem_unmap(0,BUFPAGE))<0)return r;
+		i += temp;
+	}
+	if (va + i - ROUNDDOWN(va + i, BY2PG)) {
+		offset = va + i - ROUNDDOWN(va + i, BY2PG);
+		temp = MIN(BY2PG - offset, sgsize - i);
+		if((r=syscall_mem_map(child_envid,va+i,0,BUFPAGE,PTE_V|PTE_R))<0)return r;
+		user_bzero(BUFPAGE + offset, temp);
+		if((r=syscall_mem_unmap(0,BUFPAGE))<0)return r;
+		i += temp;
+	}
+	while (i < sgsize) {
+		temp = MIN(BY2PG, sgsize - i);
+		if((r=syscall_mem_alloc(child_envid,va+i,PTE_V|PTE_R))<0)return r;
+        i += temp;
+    }
+    return 0;	return 0;
 }
 
 int spawn(char *prog, char **argv)
 {
-	//u_char elfbuf[512];
-	//u_char* elfbuf;
+	u_char elfbuf[512];
 	int r;
 	int fd;
 	u_int child_envid;
-	int size, text_start;
+	int size, text_start, count;
 	u_int i, *blk;
 	u_int esp;
-	Elf32_Ehdr* elf;
-	Elf32_Phdr* ph;
+	Elf32_Ehdr* ehdr;
+	Elf32_Phdr* phdr;
+
+	int res;
 	// Note 0: some variable may be not used,you can cancel them as you like
 	// Step 1: Open the file specified by `prog` (prog is the path of the program)
 	if((r=open(prog, O_RDONLY))<0){
 		user_panic("spawn ::open line 102 RDONLY wrong !\n");
 		return r;
 	}
-	fd=r;
 	// Your code begins here
-	// Before Step 2 , You had better check the "target" spawned is a execute bin 
-	//r = readn(fd, elfbuf, sizeof(elfbuf));
-	u_char *elfbuf;
-    elfbuf = fd2data(num2fd(fd));
-    size = ((struct Filefd*)num2fd(fd))->f_file.f_size; 	
-	if (size < 4 || !usr_is_elf_format(elfbuf)) {
-        writef("size || !is_elf");
-        return -1;
-    }	
+	// Before Step 2 , You had better check the "target" spawned is a execute bin
+	fd=r;
+	if((r=readn(fd,elfbuf,sizeof(Elf32_Ehdr)))<0)user_panic("read ehdr failed");
+	ehdr=elfbuf;
+
+	res=((struct Filefd*)num2fd(fd))->f_file.f_size;
+
+	if(res<4||!usr_is_elf_format(ehdr)||ehdr->e_type!=2)user_panic("not elf or exec");
+	size=ehdr->e_phentsize;
+	text_start=ehdr->e_phoff;
+	count=ehdr->e_phnum;
+
 	// Step 2: Allocate an env (Hint: using syscall_env_alloc())
-	child_envid=syscall_env_alloc();
-	if(child_envid<0){
-		writef("alloc_failed\n");
-		return child_envid;
-	}
+	if((child_envid=syscall_env_alloc())<0)user_panic("syscall_env_alloc failed");
+
 	// Step 3: Using init_stack(...) to initialize the stack of the allocated env
-	r=init_stack(child_envid,argv,&esp);
-	if(r<0){
-		writef("init_stack_failed\n");
-		return r;
-	}
+	init_stack(child_envid,argv,&esp);
 	// Step 3: Map file's content to new env's text segment
 	//        Hint 1: what is the offset of the text segment in file? try to use objdump to find out.
 	//        Hint 2: using read_map(...)
@@ -208,26 +197,22 @@ int spawn(char *prog, char **argv)
 	//       the file is opened successfully, and env is allocated successfully.
 	// Note2: You can achieve this func in any way ，remember to ensure the correctness
 	//        Maybe you can review lab3 
-	elf=(Elf32_Ehdr*)elfbuf;
-	ph=NULL;
-	u_char* ph_table=elfbuf+elf->e_phoff;
-	Elf32_Half ph_entry_count=elf->e_phnum;
-	Elf32_Half phentsize=elf->e_phentsize;
-	for(i=0;i<ph_entry_count;i++){
-		ph=(Elf32_Phdr *)ph_table;
-		if(ph->p_type==PT_LOAD){
-			r=usr_load_elf(fd,ph,child_envid);
-			if(r<0){
-				return r;
-			}
-		}
-		ph_table+=phentsize;
-	}
 	// Your code ends here
-	
+	for(i=0;i<count;i++){
+		if((r=seek(fd,text_start))<0)user_panic("seek failed");
+		if((r=readn(fd,elfbuf,size))<0)user_panic("readn failed");
+		phdr=elfbuf;
+		if(phdr->p_type==PT_LOAD){
+			if((r=usr_load_elf(fd,phdr,child_envid))<0)user_panic("load failed");
+		}
+		text_start+=size;
+	}
+
+	//int res=count*size;
+	//for(i=0;i<count;i++)res+=size;
 
 	struct Trapframe *tf;
-	writef("\n::::::::::spawn size : %x  sp : %x::::::::\n",size,esp);
+	writef("\n::::::::::spawn size : %x  sp : %x::::::::\n",res,esp);
 	tf = &(envs[ENVX(child_envid)].env_tf);
 	tf->pc = UTEXT;
 	tf->regs[29]=esp;
@@ -275,3 +260,5 @@ spawnl(char *prog, char *args, ...)
 {
 	return spawn(prog, &args);
 }
+
+
