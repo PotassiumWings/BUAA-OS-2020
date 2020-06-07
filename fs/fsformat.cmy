@@ -211,25 +211,18 @@ struct File *create_file(struct File *dirf) {
     // Your code here
     // Step1: According to different range of nblk, make classified discussion to 
     //        calculate the correct block number.
-	if(nblk==0){
-		return (struct File*)(disk[make_link_block(dirf,0)].data);
-	}else if(nblk<=NDIRECT){
-		bno=dirf->f_direct[nblk-1];
-	}else{
-		bno=((int*)(disk[dirf->f_indirect].data))[nblk-1];
-	}
-	// Step2: Find an unused pointer
-	dirblk=(struct File*)(disk[bno].data);
-	//¸Ã¿éÈÔÓÐÊ£Óà 
-	for(i=0;i<FILE2BLK;i++){
-		if(dirblk[i].f_name[0]=='\0'){
-			return &dirblk[i];
-		}
-	} 
-	//ÕÒÐÂ¿é 
-	bno=make_link_block(dirf, nblk);
-	return (struct File*)disk[bno].data;
+    if(nblk==0){
+        bno=make_link_block(dirf,nblk);
+        return disk[bno].data;
+    }
+    if (nblk<=NDIRECT)bno=dirf->f_direct[nblk-1];
+    else bno=((u_int *)(disk[dirf->f_indirect].data))[nblk-1];
+    dirblk = (struct File*)disk[bno].data;
 
+    // Step2: Find an unused pointer
+    for(i=0;i<FILE2BLK;i++)if(dirblk[i].f_name[0]=='\0')return dirblk+i;
+    bno=make_link_block(dirf,nblk);
+    return disk[bno].data;
 }
 
 // Write file to disk under specified dir.
@@ -267,7 +260,6 @@ void write_file(struct File *dirf, const char *path) {
 //      We ASSUM that this funcion will never fail
 void write_directory(struct File *dirf, char *name) {
     // Your code here
-	
 }
 
 int main(int argc, char **argv) {
