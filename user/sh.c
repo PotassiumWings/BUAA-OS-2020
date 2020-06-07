@@ -1,7 +1,7 @@
 #include "lib.h"
 #include <args.h>
 
-int debug_ = 0;
+int debug1 = 0;
 
 //
 // get the next token from string s
@@ -24,11 +24,11 @@ _gettoken(char *s, char **p1, char **p2)
 	int t;
 
 	if (s == 0) {
-		//if (debug > 1) writef("GETTOKEN NULL\n");
+		//if (debug1 > 1) writef("GETTOKEN NULL\n");
 		return 0;
 	}
 
-	//if (debug > 1) writef("GETTOKEN: %s\n", s);
+	//if (debug1 > 1) writef("GETTOKEN: %s\n", s);
 
 	*p1 = 0;
 	*p2 = 0;
@@ -36,7 +36,7 @@ _gettoken(char *s, char **p1, char **p2)
 	while(strchr(WHITESPACE, *s))
 		*s++ = 0;
 	if(*s == 0) {
-	//	if (debug > 1) writef("EOL\n");
+	//	if (debug1 > 1) writef("EOL\n");
 		return 0;
 	}
 	if(strchr(SYMBOLS, *s)){
@@ -44,14 +44,14 @@ _gettoken(char *s, char **p1, char **p2)
 		*p1 = s;
 		*s++ = 0;
 		*p2 = s;
-//		if (debug > 1) writef("TOK %c\n", t);
+//		if (debug1 > 1) writef("TOK %c\n", t);
 		return t;
 	}
 	*p1 = s;
 	while(*s && !strchr(WHITESPACE SYMBOLS, *s))
 		s++;
 	*p2 = s;
-	if (debug > 1) {
+	if (debug1 > 1) {
 		t = **p2;
 		**p2 = 0;
 //		writef("WORD: %s\n", *p1);
@@ -106,37 +106,39 @@ again:
 			}
 			// Your code here -- open t for reading,
 			// dup it onto fd 0, and then close the fd you got.
-			//user_panic("1");
-			r = open(t, O_RDONLY);
-			if (r < 0)
-			{
-				user_panic("< open file failed!");
+			fdnum=open(t,O_RDONLY);
+			if(fdnum<0){
+				user_panic("failed\n");
 			}
-			fd = r;
-			dup(fd, 0);
-			close(fd);
+			dup(fdnum,0);
+			close(fdnum);
+			//oto runit;
+			break;
+			//user_panic("failed\n");
 			break;
 		case '>':
-			if(gettoken(0, &t) != 'w'){
-				writef("syntax error: < not followed by word\n");
-				exit();
-			}
 			// Your code here -- open t for writing,
 			// dup it onto fd 1, and then close the fd you got.
-			//user_panic("2");
-			r = open(t, O_WRONLY);
-			if (r < 0)
-			{
-				user_panic("> open file failed!");
+			if(gettoken(0,&t)!='w'){
+				writef("syntax error: > not followed by word\n");
+				exit();
+			}			
+			fdnum = open(t, O_WRONLY);
+			if(fdnum<0){
+				user_panic("failed\n");
 			}
-			fd = r;
-			dup(fd, 1);
-			close(fd);
+			dup(fdnum, 1);
+			close(fdnum);
+			//goto runit;
 			break;
+			//user_panic("failed\n");
+			//break;
 		case '|':
 			// Your code here.
 			// 	First, allocate a pipe.
+			pipe(p);
 			//	Then fork.
+			i=fork();
 			//	the child runs the right side of the pipe:
 			//		dup the read end of the pipe onto 0
 			//		close the read end of the pipe
@@ -149,29 +151,25 @@ again:
 			//		set "rightpipe" to the child envid
 			//		goto runit, to execute this piece of the pipeline
 			//			and then wait for the right side to finish
-			//user_panic("3");
-			pipe(p);
-			if ((rightpipe = fork()) == 0)
-			{
-				dup(p[0], 0);
+			if(i==0){
+				dup(p[0],0);
 				close(p[0]);
 				close(p[1]);
 				goto again;
-			}
-			else
-			{
+			}else{
 				dup(p[1], 1);
 				close(p[1]);
 				close(p[0]);
 				goto runit;
 			}
+			user_panic("| not implemented");
 			break;
 		}
 	}
 
 runit:
 	if(argc == 0) {
-		if (debug) writef("EMPTY COMMAND\n");
+		if (debug1) writef("EMPTY COMMAND\n");
 		return;
 	}
 	argv[argc] = 0;
@@ -186,11 +184,11 @@ runit:
 		writef("spawn %s: %e\n", argv[0], r);
 	close_all();
 	if (r >= 0) {
-		if (debug) writef("[%08x] WAIT %s %08x\n", env->env_id, argv[0], r);
+		if (debug1) writef("[%08x] WAIT %s %08x\n", env->env_id, argv[0], r);
 		wait(r);
 	}
 	if (rightpipe) {
-		if (debug) writef("[%08x] WAIT right-pipe %08x\n", env->env_id, rightpipe);
+		if (debug1) writef("[%08x] WAIT right-pipe %08x\n", env->env_id, rightpipe);
 		wait(rightpipe);
 	}
 
@@ -248,7 +246,7 @@ umain(int argc, char **argv)
 	writef(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
 	ARGBEGIN{
 	case 'd':
-		debug_++;
+		debug1++;
 		break;
 	case 'i':
 		interactive = 1;
@@ -289,3 +287,4 @@ umain(int argc, char **argv)
 			wait(r);
 	}
 }
+
