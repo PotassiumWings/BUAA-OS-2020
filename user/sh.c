@@ -106,7 +106,7 @@ again:
 			}
 			// Your code here -- open t for reading,
 			// dup it onto fd 0, and then close the fd you got.
-			user_panic("1");
+			//user_panic("1");
 			r = open(t, O_RDONLY);
 			if (r < 0)
 			{
@@ -123,7 +123,7 @@ again:
 			}
 			// Your code here -- open t for writing,
 			// dup it onto fd 1, and then close the fd you got.
-			user_panic("2");
+			//user_panic("2");
 			r = open(t, O_WRONLY);
 			if (r < 0)
 			{
@@ -149,7 +149,7 @@ again:
 			//		set "rightpipe" to the child envid
 			//		goto runit, to execute this piece of the pipeline
 			//			and then wait for the right side to finish
-			user_panic("3");
+			//user_panic("3");
 			pipe(p);
 			if ((rightpipe = fork()) == 0)
 			{
