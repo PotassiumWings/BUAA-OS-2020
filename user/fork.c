@@ -234,7 +234,7 @@ thread_duppage(u_int envid, u_int pn)
 }
 
 u_int user_getsp(void) {
-	u_int sp = (envs + ENVX(syscall_getenvid()))->env_tf.cp0_epc;
+	u_int sp = (envs + ENVX(syscall_getenvid()))->env_tf.cp0_epc - 4;
 	return ROUNDDOWN(sp,BY2PG);
 }
 int
@@ -255,9 +255,10 @@ thread_fork(void)
         return 0;
     }
     u_int j;
-    for (i = 0; i < user_getsp(); i += PDMAP) {
+    int cursp = user_getsp();
+    for (i = 0; i < cursp; i += PDMAP) {
         if ((*vpd)[PDX(i)]) {
-            for (j = 0; j < PDMAP && i + j < user_getsp(); j += BY2PG) {
+            for (j = 0; j < PDMAP && i + j < cursp; j += BY2PG) {
                 if ((*vpt)[VPN(i + j)])
                     thread_duppage(newenvid, VPN(i + j));
             }
