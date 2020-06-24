@@ -217,6 +217,7 @@ env_alloc(struct Env **new, u_int parent_id)
     //e->env_status = ENV_RUNNABLE;
     e->env_parent_id = parent_id;
     e->env_runs = 0;
+    e->env_nop = 0;
 
     /*Step 4: Focus on initializing the sp register and cp0_status of env_tf field, located at this new Env. */
     e->env_tf.cp0_status = 0x10001004;
@@ -466,6 +467,10 @@ env_destroy(struct Env *e)
     /* Hint: free e. */
     env_free(e);
 
+    printf("%08x envid\n", e->env_id);
+    printf("%08x pgfault out\n", e->env_nop);
+    printf("%08x pgfault cow\n", e->env_runs);
+
     /* Hint: schedule to run a new environment. */
     if (curenv == e) {
         curenv = NULL;
@@ -511,7 +516,7 @@ env_run(struct Env *e)
 
     /*Step 2: Set 'curenv' to the new environment. */
     curenv = e;
-    curenv->env_runs++;
+    //curenv->env_runs++;
     curenv->env_status = ENV_RUNNABLE;
 
     /*Step 3: Use lcontext() to switch to its address space. */
