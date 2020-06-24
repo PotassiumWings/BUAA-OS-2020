@@ -132,8 +132,10 @@ serve_open(u_int envid, struct Fsreq_open *rq)
 	o->o_mode = rq->req_omode;
 	ff->f_fd.fd_omode = o->o_mode;
 	ff->f_fd.fd_dev_id = devfile.dev_id;
-
-	ff->f_file.f_path = path;
+	int i;
+	for (i = 0; i < 40; i++) {
+		ff->f_file.f_path[i] = path[i];
+	}
 
 	ipc_send(envid, 0, (u_int)o->o_ff, PTE_V | PTE_R | PTE_LIBRARY);
 }
