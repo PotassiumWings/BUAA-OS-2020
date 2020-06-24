@@ -19,8 +19,25 @@ struct Dev devfile = {
 	.dev_close =	file_close,
 	.dev_stat =	file_stat,
 };
-
-
+u_char buf[BY2PG*3];
+int get_checksum(const char *path) {
+	int r,i,j,size;
+	struct Fd *fd;
+	struct Filefd *ffd;
+	u_char res = 0;
+	if ((r=open(path, O_RDONLY))<0)return r;
+	fd=num2fd(r);
+	ffd=(struct Filefd*)fd;
+	size=ffd->f_file.f_size;
+	for(i = 0; i < size; i += BY2PG) {
+		int in_size = file_read(fd,buf,BY2PG,i);
+		int sum = 0;
+		for(j=0;j<in_size;j++)sum+=buf[j];
+		res+=~sum;
+	}
+	ffd->f_file.f_checksum=res;
+	return fd2num(fd);
+}
 // Overview:
 //	Open a file (or directory).
 //
