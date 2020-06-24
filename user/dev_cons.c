@@ -24,7 +24,10 @@ int ugetStr(char *buff) {
 	while (c != '\r') {
 		c = 0;
 		while (c == 0) {
-			syscall_read_dev(&c,0x10000000,1);
+			int r=0;
+			if((r=syscall_read_dev(&c,0x10000000,1))<0) {
+				return r;
+			}
 		}
 		syscall_write_dev(&c,0x10000000,1);
 		buff[now_index++] = c;
