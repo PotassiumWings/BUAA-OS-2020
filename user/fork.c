@@ -279,5 +279,5 @@ thread_fork(void)
     if ((r=syscall_set_env_status(newenvid, ENV_RUNNABLE)) < 0)
         return r;
         //writef("fork end!haha!envid %d ",newenvid);
-    return newenvid;
+    return newenvid; 
 }
