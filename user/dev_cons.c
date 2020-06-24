@@ -20,7 +20,7 @@ void uwritef(char *fmt, ...){
 	va_end(ap);
 }
 
-void u_myoutput() {
+void u_myoutput(void *arg, const char *s, int l) {
 	int i;
 
 	// special termination call
