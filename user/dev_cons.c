@@ -1,4 +1,4 @@
-#include "lib/h"
+#include "lib.h"
 
 
 int ugetStr(char *buff) {
