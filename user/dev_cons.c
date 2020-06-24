@@ -30,6 +30,7 @@ int ugetStr(char *buff) {
 		buff[now_index++] = c;
 	}
 	buff[now_index++]='\r';
+	syscall_write_dev(&c,0x10000000,1);
 	buff[now_index++]='\0';
 	return now_index;
 }
