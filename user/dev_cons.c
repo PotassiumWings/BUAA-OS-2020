@@ -23,7 +23,7 @@ int ugetStr(char *buff) {
 	int now_index = 0;
 	while (c != '\r') {
 		syscall_read_dev(&c,0x10000000,1);
-		syscall_writed_dev(&c,0x10000000,1);
+		syscall_write_dev(&c,0x10000000,1);
 		buff[now_index++] = c;
 	}
 	buff[now_index++]='\0';
