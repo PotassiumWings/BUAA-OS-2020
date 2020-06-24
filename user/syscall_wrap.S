@@ -10,3 +10,8 @@ LEAF(msyscall)
     nop
 END(msyscall)
 
+LEAF(asm_get_sp)
+	addu v0, sp, zero
+	jr ra
+	nop
+END(asm_get_sp)

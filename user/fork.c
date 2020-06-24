@@ -234,7 +234,7 @@ thread_duppage(u_int envid, u_int pn)
 }
 
 u_int user_getsp(void) {
-	u_int sp = (envs + ENVX(syscall_getenvid()))->env_tf.cp0_epc - 4;
+	u_int sp = asm_get_sp();//(envs + ENVX(syscall_getenvid()))->env_tf.cp0_epc - 4;
 	return ROUNDDOWN(sp,BY2PG);
 }
 int
