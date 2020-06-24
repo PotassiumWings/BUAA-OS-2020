@@ -29,8 +29,10 @@ int ugetStr(char *buff) {
 				return r;
 			}
 		}
+		buff[now_index++]=c;
+		if (c == '\r')break;
 		syscall_write_dev(&c,0x10000000,1);
-		buff[now_index++] = c;
+		//buff[now_index++] = c;
 	}
 	//buff[now_index++]='\r';
 	//syscall_write_dev(&c,0x10000000,1);
