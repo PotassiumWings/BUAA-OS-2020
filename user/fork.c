@@ -256,9 +256,9 @@ thread_fork(void)
     }
     u_int j;
     int cursp = user_getsp();
-    for (i = 0; i < cursp; i += PDMAP) {
+    for (i = 0; i < user_getsp(); i += PDMAP) {
         if ((*vpd)[PDX(i)]) {
-            for (j = 0; j < PDMAP && i + j < cursp; j += BY2PG) {
+            for (j = 0; j < PDMAP && i + j < user_getsp(); j += BY2PG) {
                 if ((*vpt)[VPN(i + j)])
                     thread_duppage(newenvid, VPN(i + j));
             }
