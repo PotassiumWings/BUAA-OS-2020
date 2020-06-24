@@ -33,7 +33,8 @@ struct File {
 	u_int f_indirect;
 
 	struct File *f_dir;		// the pointer to the dir where this file is in, valid only in memory.
-	u_char f_pad[BY2FILE - MAXNAMELEN - 4 - 4 - NDIRECT * 4 - 4 - 4];
+	u_char f_path[40];
+	u_char f_pad[BY2FILE - MAXNAMELEN - 4 - 4 - NDIRECT * 4 - 4 - 4 - 40];
 };
 
 #define FILE2BLK	(BY2BLK/sizeof(struct File))

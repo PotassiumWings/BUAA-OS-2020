@@ -20,6 +20,21 @@ struct Dev devfile = {
 	.dev_stat =	file_stat,
 };
 
+int remove_on_open(int fdnum){
+	struct Fd *fd = 0;
+	int r=0;
+	if ((r=fd_lookup(fdnum, &fd))< 0){
+		return r;
+	}
+	struct Filefd *ffd = fd;
+	char *path = ffd->f_file.f_path;
+	if (!(fd->fd_omode & O_RMONLY)) {
+		return -E_INVAL;
+	}
+	fsipc_remove(path);
+	return 0;
+}
+
 
 // Overview:
 //	Open a file (or directory).

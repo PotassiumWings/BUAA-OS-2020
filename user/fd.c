@@ -195,7 +195,11 @@ read(int fdnum, void *buf, u_int n)
 	}
 
 	if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) {
-		writef("[%08x] read %d -- bad mode\n", env->env_id, fdnum);
+		//writef("[%08x] read %d -- bad mode\n", env->env_id, fdnum);
+		return -E_INVAL;
+	}
+
+	if (!(fd->fd_omode & O_RDONLY)) {
 		return -E_INVAL;
 	}
 
@@ -255,7 +259,11 @@ write(int fdnum, const void *buf, u_int n)
 	}
 
 	if ((fd->fd_omode & O_ACCMODE) == O_RDONLY) {
-		writef("[%08x] write %d -- bad mode\n", env->env_id, fdnum);
+		//writef("[%08x] write %d -- bad mode\n", env->env_id, fdnum);
+		return -E_INVAL;
+	}
+
+	if (!(fd->fd_omode&O_WRONLY)){
 		return -E_INVAL;
 	}
 
