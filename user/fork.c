@@ -226,10 +226,10 @@ thread_duppage(u_int envid, u_int pn)
         u_int addr = pn << PGSHIFT;
         u_int perm = ((Pte*)(*vpt))[pn] & 0xfff;
     if (!(perm & PTE_V)) return;
-    if (perm & PTE_COW) {
+    /*if (perm & PTE_COW) {
     	pgfault(addr);
     	perm = ((Pte*)(*vpt))[pn] & 0xfff;
-	}
+	}*/
     if (syscall_mem_map(0, addr, envid, addr, perm) < 0) user_panic("t-dup panic");
 }
 
