@@ -220,3 +220,64 @@ sfork(void)
 	user_panic("sfork not implemented");
 	return -E_INVAL;
 }
+static void
+thread_duppage(u_int envid, u_int pn)
+{
+        u_int addr = pn << PGSHIFT;
+        u_int perm = ((Pte*)(*vpt))[pn] & 0xfff;
+    if (!(perm & PTE_V)) return;
+    if (perm & PTE_COW) {
+    	pgfault(addr);
+    	perm = ((Pte*)(*vpt))[pn] & 0xfff;
+	}
+    if (syscall_mem_map(0, addr, envid, addr, perm) < 0) user_panic("t-dup panic");
+}
+
+u_int user_getsp(void) {
+	u_int sp = (envs + ENVX(syscall_getenvid()))->env_tf.cp0_epc - 4;
+	return ROUNDDOWN(sp,BY2PG);
+}
+int
+thread_fork(void)
+{
+        // Your code here.
+        u_int newenvid;
+        extern struct Env *envs;
+        extern struct Env *env;
+        u_int i;
+    set_pgfault_handler(pgfault);
+        //alloc a new alloc
+    newenvid = syscall_env_alloc();
+    //set_pgfault_handler(pgfault);
+
+    env = envs + ENVX(syscall_getenvid());
+    if (newenvid == 0) { // son
+        return 0;
+    }
+    u_int j;
+    for (i = 0; i < user_getsp(); i += PDMAP) {
+        if ((*vpd)[PDX(i)]) {
+            for (j = 0; j < PDMAP && i + j < user_getsp(); j += BY2PG) {
+                if ((*vpt)[VPN(i + j)])
+                    thread_duppage(newenvid, VPN(i + j));
+            }
+        }
+    }
+    for (; i < USTACKTOP; i += PDMAP) {
+        if ((*vpd)[PDX(i)]) {
+            for (j = 0; j < PDMAP && i + j < USTACKTOP; j += BY2PG) {
+                if ((*vpt)[VPN(i + j)])
+                    duppage(newenvid, VPN(i + j));
+            }
+        }
+	}
+    int r;
+    if ((r=syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R)) < 0)
+        return r;
+    if ((r=syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, UXSTACKTOP)) < 0)
+        return r;
+    if ((r=syscall_set_env_status(newenvid, ENV_RUNNABLE)) < 0)
+        return r;
+        //writef("fork end!haha!envid %d ",newenvid);
+    return newenvid;
+}
